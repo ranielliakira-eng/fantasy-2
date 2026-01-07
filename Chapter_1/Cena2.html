@@ -6,7 +6,7 @@
 <title>Cena 2 - O Alerta</title>
 <style>
   body { margin: 0; background: #000; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
-  canvas { max-width: 100%; max-height: 100%; object-fit: contain; background: #1a1a2e; }
+  canvas { max-width: 100%; max-height: 100%; object-fit: contain; background: #1a1a2e; image-rendering: pixelated; }
 </style>
 </head>
 <body>
@@ -21,15 +21,26 @@ const ctx = canvas.getContext("2d");
 // CONFIGURAÇÕES DE ZOOM E CÂMERA
 // ==================================================
 const zoomConfig = {
-    scale: 1.3, // 1.0 é o normal, 1.3 é 30% de zoom
-    offsetX: -80, // Ajusta a câmera para a esquerda/direita
-    offsetY: -50  // Ajusta a câmera para cima/baixo
+    scale: 1.3,
+    offsetX: -80,
+    offsetY: -50
 };
 
 let gameState = "dialogue"; 
 let fadeAlpha = 0;
 let dialogueIndex = 0;
 const gravity = 0.8;
+
+// ==================================================
+// CONFIGURAÇÃO DE SPRITES (Ajuste os números se necessário)
+// ==================================================
+const configSprites = {
+    'Knight': { idle: 6 },
+    'Swordsman': { idle: 8 },
+    'Wizard': { idle: 6 },
+    'Enchantress': { idle: 5 },
+    'Musketeer': { run: 8, dead: 4 }
+};
 
 // ==================================================
 // DIÁLOGOS
@@ -43,7 +54,7 @@ const sceneDialogue = [
 ];
 
 // ==================================================
-// ENTIDADES
+// ENTIDADES E SPRITES
 // ==================================================
 function createSprite(src, frameCount, frameSpeed, loop = true) {
     const img = new Image();
@@ -63,31 +74,48 @@ groundImg.src = '../assets/Battleground/Platformer/Ground_02.png';
 const escolhaMenu = localStorage.getItem('heroi_da_jornada') || 'loiro'; 
 const heroiPadrao = (escolhaMenu === 'castanha') ? 'Knight' : 'Swordsman';
 
-const player = { x: 200, y: 200, w: 100, h: 100, vy: 0, facing: "right", sprite: createSprite(`../assets/${heroiPadrao}/Idle.png`, 8, 12) };
-const wizard = { x: 275, y: 200, w: 100, h: 100, vy: 0, facing: "right", sprite: createSprite("../assets/Wizard/Idle.png", 6, 14) };
-const enchantress = { x: 350, y: 200, w: 100, h: 100, vy: 0, facing: "right", sprite: createSprite("../assets/Enchantress/Idle.png", 5, 12) };
+const player = { x: 200, y: 200, w: 100, h: 100, vy: 0, facing: "right", 
+    sprite: createSprite(`../assets/${heroiPadrao}/Idle.png`, configSprites[heroiPadrao].idle, 12) };
+
+const wizard = { x: 275, y: 200, w: 100, h: 100, vy: 0, facing: "right", 
+    sprite: createSprite("../assets/Wizard/Idle.png", configSprites['Wizard'].idle, 14) };
+
+const enchantress = { x: 350, y: 200, w: 100, h: 100, vy: 0, facing: "right", 
+    sprite: createSprite("../assets/Enchantress/Idle.png", configSprites['Enchantress'].idle, 12) };
 
 const musketeer = { 
     x: 900, y: 200, w: 100, h: 100, vy: 0, 
     facing: "left", 
     active: false, 
     hasFallen: false,
-    sprite: createSprite("../assets/Musketeer/Run.png", 8, 8) 
+    sprite: createSprite("../assets/Musketeer/Run.png", configSprites['Musketeer'].run, 8) 
 };
 
 const entities = [player, wizard, enchantress, musketeer];
 
+// ==================================================
+// LÓGICA DE UPDATE
+// ==================================================
 function update() {
     entities.forEach(e => {
-        if (!e.sprite.finished) {
-            e.sprite.timer++;
-            if (e.sprite.timer >= e.sprite.frameSpeed) {
-                e.sprite.timer = 0;
-                if (e.sprite.frameIndex < e.sprite.frameCount - 1) e.sprite.frameIndex++;
-                else if (e.sprite.loop) e.sprite.frameIndex = 0;
-                else e.sprite.finished = true;
+        const s = e.sprite;
+        if (!s.finished) {
+            s.timer++;
+            if (s.timer >= s.frameSpeed) {
+                s.timer = 0;
+                s.frameIndex++;
+                
+                if (s.frameIndex >= s.frameCount) {
+                    if (s.loop) {
+                        s.frameIndex = 0;
+                    } else {
+                        s.frameIndex = s.frameCount - 1;
+                        s.finished = true;
+                    }
+                }
             }
         }
+        // Gravidade
         e.vy += gravity;
         e.y += e.vy;
         if (e.y + e.h > 270) { e.y = 270 - e.h; e.vy = 0; }
@@ -98,7 +126,7 @@ function update() {
             musketeer.x -= 8;
         } else {
             musketeer.hasFallen = true;
-            musketeer.sprite = createSprite("../assets/Musketeer/Dead.png", 4, 6, false); 
+            musketeer.sprite = createSprite("../assets/Musketeer/Dead.png", configSprites['Musketeer'].dead, 10, false); 
             setTimeout(() => { 
                 dialogueIndex++; 
                 gameState = "dialogue";
@@ -112,26 +140,34 @@ function update() {
     }
 }
 
+// ==================================================
+// RENDERIZAÇÃO
+// ==================================================
 function drawEntity(e) {
     if (e === musketeer && !e.active) return;
+    if (!e.sprite.img.complete) return;
+
     const fw = e.sprite.img.width / e.sprite.frameCount;
+    const fh = e.sprite.img.height;
+    
     ctx.save();
     if (e.facing === "left") {
         ctx.translate(e.x + e.w, e.y);
         ctx.scale(-1, 1);
-        ctx.drawImage(e.sprite.img, fw * e.sprite.frameIndex, 0, fw, e.sprite.img.height, 0, 0, e.w, e.h);
+        ctx.drawImage(e.sprite.img, Math.floor(fw * e.sprite.frameIndex), 0, fw, fh, 0, 0, e.w, e.h);
     } else {
-        ctx.drawImage(e.sprite.img, fw * e.sprite.frameIndex, 0, fw, e.sprite.img.height, e.x, e.y, e.w, e.h);
+        ctx.drawImage(e.sprite.img, Math.floor(fw * e.sprite.frameIndex), 0, fw, fh, e.x, e.y, e.w, e.h);
     }
     ctx.restore();
 }
 
 function draw() {
-    ctx.save();
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    // --- APLICAÇÃO DO ZOOM ---
-    // Centraliza o zoom no meio da tela
+    ctx.save();
+    ctx.imageSmoothingEnabled = false; // Mantém a pixel art nítida
+    
+    // Aplicação do Zoom e Câmera
     ctx.translate(zoomConfig.offsetX, zoomConfig.offsetY);
     ctx.scale(zoomConfig.scale, zoomConfig.scale);
 
@@ -139,6 +175,7 @@ function draw() {
     ctx.fillStyle = "#1a1a2e";
     ctx.fillRect(-200, -200, canvas.width + 400, canvas.height + 400);
     ctx.drawImage(fundoImg, 0, 0, 800, 450);
+    
     ctx.fillStyle = "#16213e";
     ctx.fillRect(-200, 270, canvas.width + 400, 100);
     ctx.drawImage(groundImg, 0, 270, 800, 150);
@@ -149,20 +186,24 @@ function draw() {
     // Entidades
     entities.forEach(drawEntity);
 
-    ctx.restore(); // Sai do modo Zoom para desenhar a interface (UI)
+    ctx.restore(); 
 
-    // Caixa de Diálogo (Desenhada SEM zoom para ficar legível)
+    // UI - Diálogos (Sem Zoom)
     if (gameState === "dialogue" || gameState === "event") {
         const d = sceneDialogue[dialogueIndex];
         if (d && gameState !== "event") {
             ctx.fillStyle = "rgba(0,0,0,0.85)";
             ctx.fillRect(50, 320, 700, 100);
+            ctx.strokeStyle = "#4ecca3";
+            ctx.lineWidth = 2;
+            ctx.strokeRect(55, 325, 690, 90);
+            
             ctx.fillStyle = "#4ecca3";
-            ctx.font = "bold 20px Arial";
-            ctx.fillText(d.speaker + ":", 70, 355);
+            ctx.font = "bold 20px Georgia";
+            ctx.fillText(d.speaker + ":", 80, 355);
             ctx.fillStyle = "#fff";
             ctx.font = "18px Arial";
-            ctx.fillText(d.text, 70, 390);
+            ctx.fillText(d.text, 80, 390);
         }
     }
 
@@ -173,24 +214,24 @@ function draw() {
 }
 
 function nextDialogue() {
-    if (gameState === "event") return;
+    if (gameState === "event" || gameState === "fadeOut") return;
     const current = sceneDialogue[dialogueIndex];
+    
     if (current && current.action === "trigger_musketeer") {
         gameState = "event";
         musketeer.active = true;
     } else {
         dialogueIndex++;
     }
+    
     if (dialogueIndex >= sceneDialogue.length) gameState = "fadeOut";
 }
 
 window.addEventListener("keydown", e => { if (e.key === "Enter") nextDialogue(); });
+canvas.addEventListener("touchstart", nextDialogue);
 
 function loop() { update(); draw(); requestAnimationFrame(loop); }
 loop();
 </script>
 </body>
-
 </html>
-
-
