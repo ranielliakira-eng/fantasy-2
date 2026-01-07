@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pixel Quest 2 - Em Construção</title>
+    <style>
+        body, html { 
+            margin: 0; padding: 0; height: 100%; width: 100%; 
+            background-color: #000; display: flex; justify-content: center; align-items: center; 
+            overflow: hidden; font-family: 'Courier New', monospace;
+        }
+        #game-area {
+            width: 800px; height: 450px;
+            background-image: url('../Background.png');
+            background-size: 100% 100%;
+            image-rendering: pixelated;
+            position: relative;
+            border: 4px solid #333;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .container {
+            background-color: rgba(0, 0, 0, 0.9);
+            padding: 30px; border-radius: 10px; border: 2px solid #ffd700;
+            display: flex; flex-direction: column; align-items: center;
+            text-align: center; min-width: 350px;
+        }
+        h1 { color: #ffd700; font-size: 24px; margin: 0 0 10px 0; text-shadow: 2px 2px #000; }
+        p { color: white; font-size: 14px; line-height: 1.6; margin-bottom: 25px; }
+        
+        /* --- ANIMAÇÃO DO SPRITE DE 8 FRAMES --- */
+        .hero-idle {
+            width: 64px;   /* Largura de 1 frame */
+            height: 64px;  /* Altura de 1 frame */
+            background-image: url('../assets/Swordsman/Idle.png');
+            background-repeat: no-repeat;
+            background-size: auto 64px; /* Garante que a altura do sprite bata com a div */
+            image-rendering: pixelated;
+            filter: grayscale(1);
+            margin-bottom: 15px;
+            
+            /* Nome da animação | Tempo | Tipo (steps) | Repetição */
+            animation: playIdle 0.8s steps(8) infinite;
+        }
+
+        @keyframes playIdle {
+            from { background-position: 0px; }
+            to { background-position: -512px; } /* 64px vezes 8 frames */
+        }
+
+        .btn {
+            width: 220px; padding: 12px;
+            background: none; color: #ffd700; border: 2px solid #ffd700; 
+            cursor: pointer; font-size: 14px; font-weight: bold;
+            font-family: 'Courier New', monospace; transition: 0.2s;
+        }
+        .btn:hover { background: #ffd700; color: black; transform: scale(1.05); }
+    </style>
+</head>
+<body>
+
+    <div id="game-area">
+        <div class="container">
+            <div class="hero-idle"></div>
+            
+            <h1>🚧 CAPÍTULO EM OBRAS 🚧</h1>
+            
+            <p>
+                Este herói está descansando enquanto<br>
+                finalizamos esta parte da jornada.<br>
+                <strong>Em breve, novos desafios!</strong>
+            </p>
+
+            <button class="btn" onclick="window.location.href='../index.html'">VOLTAR AO MENU</button>
+        </div>
+    </div>
+
+</body>
+</html>
