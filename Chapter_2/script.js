@@ -75,6 +75,13 @@ let switchCooldown = 0; // Para evitar trocas frenéticas
 window.onload = function() {
     const numJogadores = parseInt(localStorage.getItem('jogadores_total')) || 1;
     
+const btnTroca = document.getElementById('btn-switch-hero');
+
+if (btnTroca) {
+    btnTroca.addEventListener('click', () => {
+        trocarPersonagem();
+    });
+}
     // Leitura do LocalStorage (Castanha = Knight, Loiro = Swordsman, conforme seu código)
     const rawChoice = localStorage.getItem('heroi_da_jornada') || 'loiro';
     const heroName = (rawChoice === 'castanha') ? 'Knight' : 'Swordsman';
@@ -110,8 +117,6 @@ window.onload = function() {
         initEnemies(); 
         if (!isMuted) bgMusic.play().catch(() => {}); 
         
-        // Cria o botão de troca na tela se não existir
-        criarBotaoTroca();
     };
 
     // Controles Mobile
@@ -208,31 +213,8 @@ function trocarPersonagem() {
     // Aplica a troca no Player 1
     configurarPlayer(player, nextHero);
 
-    // Cooldown de 1 segundo (60 frames)
+    // Cooldown
     switchCooldown = 180;
-}
-
-// Cria o botão HTML dinamicamente (para não precisar mexer no index.html agora)
-function criarBotaoTroca() {
-    const btn = document.createElement('button');
-    btn.innerText = "Trocar (Q)";
-    btn.style.position = "absolute";
-    btn.style.top = "20px";
-    btn.style.left = "200px"; // Ao lado da barra de vida
-    btn.style.padding = "10px";
-    btn.style.backgroundColor = "#444";
-    btn.style.color = "white";
-    btn.style.border = "2px solid white";
-    btn.style.cursor = "pointer";
-    btn.style.zIndex = "1000";
-    btn.style.fontFamily = "Arial, sans-serif";
-    btn.id = "btn-switch-hero";
-
-    btn.onclick = function() {
-        trocarPersonagem();
-    };
-
-    document.body.appendChild(btn);
 }
 
 // Pequeno efeito visual (placeholder)
@@ -600,12 +582,6 @@ function update(){
     }
 
     // --- CÓDIGO NOVO: Diminuir o Cooldown da Troca de Personagem ---
-    if (window.switchCooldown > 0) { // Usamos window.switchCooldown se definiu global
-        window.switchCooldown--; 
-    } else if (typeof switchCooldown !== 'undefined' && switchCooldown > 0) {
-        switchCooldown--;
-    }
-
     if (switchCooldown > 0) switchCooldown--;
 
     // Marca Player 1 como morto (sem parar o jogo)
@@ -1366,5 +1342,3 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 });
-
-
