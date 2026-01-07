@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Cena 4 e 5 - A Dívida de Sangue (Zoom 1.3)</title>
+<style>
+  body { margin: 0; background: #000; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+  canvas { max-width: 100%; max-height: 100%; object-fit: contain; background: #2c3e50; border: 2px solid #333; }
+</style>
+</head>
+<body>
+
+<canvas id="gameCanvas" width="800" height="450"></canvas>
+
+<script>
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+
+// ==================================================
+// ESTADOS E CONTROLE
+// ==================================================
+let gameState = "travel"; 
+let fadeAlpha = 0;
+let dialogueIndex = 0;
+const ZOOM_LEVEL = 1.3;
+
+// ==================================================
+// DIÁLOGOS
+// ==================================================
+const combinedDialogue = [
+    { speaker: "Enchantress", text: "Reinos não marcham no ritmo do desespero. Cada decisão ecoa por séculos.", place: "trail" },
+    { speaker: "Wizard", text: "E ainda assim, a inércia de um trono pode condenar milhares em silêncio.", place: "trail" },
+    { speaker: "Você", text: "O novo rei compreenderá.", place: "trail", action: "go_to_throne" },
+
+    { speaker: "Você", text: "Majestade, trago notícias. O Reino Humano foi atacado.", place: "throne" },
+    { speaker: "Você", text: "O ataque foi repentino… e carregava uma força além do natural.", place: "throne" },
+
+    { speaker: "Novo Rei Anão", text: "Minha coroa ainda pesa mais que meu exército. A coroação mal terminou.", place: "throne" },
+    { speaker: "Novo Rei Anão", text: "Os clãs se reorganizam, e cada martelo precisa de tempo para ser erguido.", place: "throne" },
+
+    { speaker: "Novo Rei Anão", text: "Mas as montanhas não quebram juramentos.", place: "throne" },
+    { speaker: "Novo Rei Anão", text: "O que você fez não será esquecido.", place: "throne" },
+    { speaker: "Novo Rei Anão", text: "Quando os estandartes forem erguidos, marcharemos.", place: "throne" },
+{ speaker: "Novo Rei Anão", text: "Preparem-se… pois isto é apenas o começo.", place: "throne" }
+];
+// ==================================================
+// ENTIDADES E SPRITES
+// ==================================================
+function createSprite(src, frameCount, frameSpeed) {
+    const img = new Image();
+    img.src = src;
+    return { img, frameCount, frameSpeed, frameIndex: 0, timer: 0 };
+}
+
+function createCharacter(folder, idleFrames, walkFrames) {
+    return {
+        animations: {
+            idle: createSprite(`../assets/${folder}/Idle.png`, idleFrames, 12),
+            walk: createSprite(`../assets/${folder}/Walk.png`, walkFrames, 10)
+        },
+        currentAnim: "walk",
+        x: 0, y: 150, w: 100, h: 100
+    };
+}
+
+const escolhaMenu = localStorage.getItem('heroi_da_jornada') || 'loiro'; 
+const heroiPadrao = (escolhaMenu === 'castanha') ? 'Knight' : 'Swordsman';
+
+const player = createCharacter(heroiPadrao, 8, 8);
+player.x = 150;
+
+const wizard = createCharacter("Wizard", 6, 7);
+wizard.x = 50;
+
+const enchantress = createCharacter("Enchantress", 5, 8);
+enchantress.x = -50;
+
+const reiAnao = createCharacter("Warrior_3", 5, 8);
+reiAnao.x = 500;
+reiAnao.active = false;
+reiAnao.currentAnim = "idle";
+
+const entities = [player, wizard, enchantress, reiAnao];
+
+// ==================================================
+// LÓGICA
+// ==================================================
+function update() {
+    entities.forEach(e => {
+        if (e === reiAnao && !e.active) return;
+        const anim = e.animations[e.currentAnim];
+        anim.timer++;
+        if (anim.timer >= anim.frameSpeed) {
+            anim.timer = 0;
+            anim.frameIndex = (anim.frameIndex + 1) % anim.frameCount;
+        }
+    });
+
+    if (gameState === "travel") {
+        if (player.x < 350) {
+            player.x += 1.5;
+            wizard.x += 1.5;
+            enchantress.x += 1.5;
+        } else {
+            player.currentAnim = "idle";
+            wizard.currentAnim = "idle";
+            enchantress.currentAnim = "idle";
+        }
+    }
+
+    if (gameState === "fadeOut") {
+        fadeAlpha += 0.01;
+        if (fadeAlpha >= 1) {
+            localStorage.setItem('2capitulo_1_vencido', 'true'); 
+            window.location.href = "../index.html"; 
+        }
+    }
+}
+
+function nextDialogue() {
+    const current = combinedDialogue[dialogueIndex];
+    if (current && current.action === "go_to_throne") {
+        gameState = "audience";
+        reiAnao.active = true;
+        player.x = 300;
+        wizard.x = 200;
+        enchantress.x = 100;
+        player.currentAnim = "idle";
+        wizard.currentAnim = "idle";
+        enchantress.currentAnim = "idle";
+    }
+    dialogueIndex++;
+    if (dialogueIndex >= combinedDialogue.length) gameState = "fadeOut";
+}
+
+// ==================================================
+// RENDERIZAÇÃO
+// ==================================================
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    ctx.save();
+    // APLICA O ZOOM (1.3)
+    // Traduzimos um pouco para compensar o zoom e manter o chão visível
+    ctx.translate(-80, -40); 
+    ctx.scale(ZOOM_LEVEL, ZOOM_LEVEL);
+
+    // FUNDO (Renderizado com Zoom)
+    if (gameState === "travel") {
+        ctx.fillStyle = "#2c3e50";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "#1a252f";
+        ctx.fillRect(0, 380, canvas.width, 70);
+    } else {
+        ctx.fillStyle = "#4a0e0e";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "#d4af37";
+        ctx.fillRect(0, 370, canvas.width, 10); 
+        ctx.fillStyle = "#222";
+        ctx.fillRect(0, 380, canvas.width, 70);
+    }
+
+    // PERSONAGENS (Renderizados com Zoom)
+    entities.forEach(e => {
+        if (e === reiAnao && !e.active) return;
+        const anim = e.animations[e.currentAnim];
+        const fw = anim.img.width / anim.frameCount;
+        ctx.save();
+        if (e === reiAnao) {
+            ctx.translate(e.x + e.w, e.y);
+            ctx.scale(-1, 1);
+            ctx.drawImage(anim.img, fw * anim.frameIndex, 0, fw, anim.img.height, 0, 0, e.w, e.h);
+        } else {
+            ctx.drawImage(anim.img, fw * anim.frameIndex, 0, fw, anim.img.height, e.x, e.y, e.w, e.h);
+        }
+        ctx.restore();
+    });
+
+    ctx.restore(); // Finaliza área do Zoom
+
+    // CAIXA DE DIÁLOGO (Sem zoom para não distorcer o texto)
+    const d = combinedDialogue[dialogueIndex];
+    if (d && gameState !== "fadeOut") {
+        ctx.fillStyle = "rgba(0,0,0,0.85)";
+        ctx.fillRect(50, 300, 700, 100); // Movida para baixo para não cobrir o centro
+        ctx.strokeStyle = "#d4af37";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(55, 305, 690, 90);
+        
+        ctx.fillStyle = (d.place === "trail") ? "#3498db" : "#e74c3c";
+        ctx.font = "bold 22px Georgia";
+        ctx.fillText(d.speaker + ":", 75, 335);
+        
+        ctx.fillStyle = "#fff";
+        ctx.font = "18px Arial";
+        ctx.fillText(d.text, 75, 370);
+    }
+
+    if (gameState === "fadeOut") {
+        ctx.fillStyle = `rgba(0,0,0,${fadeAlpha})`;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+}
+
+window.addEventListener("keydown", e => { if (e.key === "Enter") nextDialogue(); });
+canvas.addEventListener("touchstart", nextDialogue);
+
+function loop() { update(); draw(); requestAnimationFrame(loop); }
+loop();
+</script>
+</body>
+</html>
