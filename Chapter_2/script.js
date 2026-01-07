@@ -4,7 +4,7 @@ canvas.width = 800;
 canvas.height = 450;
 
 // --- CONFIGURAÇÕES GLOBAIS ---
-const bgMusic = new Audio('assets/sounds/song.wav');
+const bgMusic = new Audio('assets/sounds/346201__levelclearer__phone.wav');
 bgMusic.loop = true;
 bgMusic.volume = 0.5;
 
@@ -14,7 +14,7 @@ const mapWidth = 7000;
 const mapHeight = 450;
 let cameraX = 0;
 let cameraY = 0;
-let gameState = 'loading'; // Estado inicial alterado para carregamento
+let gameState = 'loading';
 let isPaused = false;
 let isMuted = false;
 let boss = null;
@@ -24,21 +24,19 @@ let projectiles = [];
 const player = {
     x: 120, y: 200, width: 100, height: 100,
     velX: 0, velY: 0, speed: 2, jumpForce: -15, attackFrameInterval: 6, attackCooldownMax: 0, attackCooldown: 0,
-    facing: 'right', onGround: false, state: 'idle',
-    hp: 3, maxHp: 3, canAirAttack: true, hasFired: false,
-    imgWalk: new Image(), imgDead: new Image(), imgJump: new Image(), imgHurt: new Image(),
+    facing: 'right', onGround: false, state: 'idle', walkTimer: 0, runThreshold: 40,
+    hp: 3, maxHp: 3, canAirAttack: true, hasFired: false, 
+    imgWalk: new Image(), imgRun: new Image(), imgDead: new Image(), imgJump: new Image(), imgHurt: new Image(),
     imgAttack: new Image(), imgIdle: new Image(),
-    attackFrames: 6, walkFrames: 8, idleFrames: 8, jumpFrames: 8, deadFrames: 4,
+    attackFrames: 6, walkFrames: 8, runFrames: 8, idleFrames: 8, jumpFrames: 8, deadFrames: 4,
     currentFrame: 0, frameTimer: 0, frameInterval: 6, dialogue: "", dialogueTimer: 0,
 };
-
-// ... abaixo do const player atual ...
 
 const player2 = {
     ...player, // Copia as propriedades base (x, y, hp, etc)
     x: 160,    // Começa um pouco à frente do P1
-    active: false,
-    imgWalk: new Image(), imgDead: new Image(), imgJump: new Image(), 
+    active: false, walkTimer: 0,
+    imgWalk: new Image(), imgRun: new Image(), imgDead: new Image(), imgJump: new Image(), 
     imgHurt: new Image(), imgAttack: new Image(), imgIdle: new Image(),
 };
 
@@ -47,23 +45,23 @@ let keysP2 = { left: false, right: false };
 // --- CONFIGURAÇÃO DOS PERSONAGENS (DATABASE) ---
 const characterStats = {
     Swordsman: {
-        idleFrames: 8, walkFrames: 8, jumpFrames: 8, attackFrames: 6, hurtFrames: 3, deadFrames: 3,
-        speed: 2, maxHp: 3, jumpForce: -15, attackType: 'melee',
+        idleFrames: 8, walkFrames: 8, runFrames: 8, jumpFrames: 8, attackFrames: 6, hurtFrames: 3, deadFrames: 3,
+        speed: 2, maxHp: 4, jumpForce: -15, attackType: 'melee',
         folder: 'assets/Swordsman'
     },
     Knight: {
-        idleFrames: 6, walkFrames: 8, jumpFrames: 6, attackFrames: 5, hurtFrames: 3, deadFrames: 4,
-        speed: 1.8, maxHp: 3, jumpForce: -13, attackType: 'melee',
+        idleFrames: 6, walkFrames: 8, runFrames: 7, jumpFrames: 6, attackFrames: 5, hurtFrames: 3, deadFrames: 4,
+        speed: 2, maxHp: 4, jumpForce: -13, attackType: 'melee',
         folder: 'assets/Knight'
     },
     Wizard: {
-        idleFrames: 6, walkFrames: 7, jumpFrames: 11, attackFrames: 10, hurtFrames: 4, deadFrames: 4,
-        speed: 2.2, maxHp: 3, jumpForce: -14, attackType: 'range',
+        idleFrames: 6, walkFrames: 7, runFrames: 8, jumpFrames: 11, attackFrames: 10, hurtFrames: 4, deadFrames: 4,
+        speed: 2.5, maxHp: 3, jumpForce: -14, attackType: 'range',
         folder: 'assets/Wizard', projectileColor: '#FFD541'
     },
     Enchantress: {
-        idleFrames: 5, walkFrames: 8, jumpFrames: 8, attackFrames: 6, hurtFrames: 2, deadFrames: 5,
-        speed: 2.5, maxHp: 5, jumpForce: -16, attackType: 'range',
+        idleFrames: 5, walkFrames: 8, runFrames: 8, jumpFrames: 8, attackFrames: 6, hurtFrames: 2, deadFrames: 5,
+        speed: 1.8, maxHp: 5, jumpForce: -16, attackType: 'range',
         folder: 'assets/Enchantress', projectileColor: '#249FDE'
     }
 };
@@ -128,6 +126,7 @@ function configurarPlayer(p, tipo) {
     // Atualiza Frames
     p.idleFrames   = stats.idleFrames;
     p.walkFrames   = stats.walkFrames;
+    p.runFrames    = stats.runFrames
     p.jumpFrames   = stats.jumpFrames;
     p.attackFrames = stats.attackFrames;
     p.hurtFrames   = stats.hurtFrames;
@@ -152,6 +151,7 @@ function configurarPlayer(p, tipo) {
     // Carrega Imagens
     p.imgIdle.src   = `${stats.folder}/Idle.png`;
     p.imgWalk.src   = `${stats.folder}/Walk.png`;
+    p.imgRun.src    = `${stats.folder}/Run.png`;
     p.imgJump.src   = `${stats.folder}/Jump.png`;
     p.imgAttack.src = `${stats.folder}/Attack_1.png`;
     p.imgHurt.src   = `${stats.folder}/Hurt.png`;
@@ -243,10 +243,8 @@ function criarEfeitoTroca(x, y) {
 }
 
 const playerDialogTriggers = [
-    { x: 600, text: "Esses Slimes não deveriam estar aqui.", used: false },
-    { x: 1800, text: "A floresta está ficando mais densa.", used: false },
-    { x: 6200, text: "Floresta está cheia de Slimes...", used: false },
-    { x: 6400, text: "Enchantress, você está bem?", used: false },
+    { x: 700, text: "Você vai ficar bem.", used: false },
+
 ];
 
 function dispararProjetil(p) {
@@ -275,33 +273,7 @@ let enemies = [];
 function initEnemies() {
     enemies = [
         { type: 'Green_Slime', x: 800, y: 200, hp: 1, speed: 1.2, attackRange: 30, frameInterval: 8, walkFrames: 8, attackFrames: 4, hurtFrames: 6, deadFrames: 3 },
-        { type: 'Green_Slime', x: 1000, y: 200, hp: 1, speed: 1.3, attackRange: 30, frameInterval: 8, walkFrames: 8, attackFrames: 4, hurtFrames: 6, deadFrames: 3 },
-        { type: 'Green_Slime', x: 1200, y: 200, hp: 1, speed: 1.4, attackRange: 30, frameInterval: 8, walkFrames: 8, attackFrames: 4, hurtFrames: 6, deadFrames: 3 },
-        { type: 'Green_Slime', x: 1300, y: 200, hp: 1, speed: 1.5, attackRange: 30, frameInterval: 8, walkFrames: 8, attackFrames: 4, hurtFrames: 6, deadFrames: 3 },
-        { type: 'Green_Slime', x: 1400, y: 200, hp: 1, speed: 1.5, attackRange: 30, frameInterval: 8, walkFrames: 8, attackFrames: 4, hurtFrames: 6, deadFrames: 3 },
-        { type: 'Green_Slime', x: 1500, y: 200, hp: 1, speed: 1.4, attackRange: 30, frameInterval: 8, walkFrames: 8, attackFrames: 4, hurtFrames: 6, deadFrames: 3 },
-        { type: 'Green_Slime', x: 1250, y: 200, hp: 1, speed: 1.3, attackRange: 30, frameInterval: 8, walkFrames: 8, attackFrames: 4, hurtFrames: 6, deadFrames: 3 },
-        { type: 'Green_Slime', x: 1450, y: 200, hp: 1, speed: 1.2, attackRange: 30, frameInterval: 8, walkFrames: 8, attackFrames: 4, hurtFrames: 6, deadFrames: 3 },
-       
-        { type: 'Blue_Slime', x: 2980, y: 200, hp: 1, speed: 1.8, attackRange: 30, frameInterval: 8, walkFrames: 8, attackFrames: 4, hurtFrames: 6, deadFrames: 3 }, 
-        { type: 'Blue_Slime', x: 3000, y: 200, hp: 1, speed: 1.7, attackRange: 30, frameInterval: 8, walkFrames: 8, attackFrames: 4, hurtFrames: 6, deadFrames: 3 }, 
-        { type: 'Blue_Slime', x: 3025, y: 200, hp: 1, speed: 1.6, attackRange: 30, frameInterval: 8, walkFrames: 8, attackFrames: 4, hurtFrames: 6, deadFrames: 3 }, 
-        { type: 'Blue_Slime', x: 3100, y: 200, hp: 1, speed: 1.6, attackRange: 30, frameInterval: 8, walkFrames: 8, attackFrames: 4, hurtFrames: 6, deadFrames: 3 }, 
-
-        { type: 'Red_Slime', x: 4000, y: 200, hp: 1, speed: 2.5, attackRange: 30, frameInterval: 8, walkFrames: 8, attackFrames: 4, hurtFrames: 6, deadFrames: 3 },
-        { type: 'Red_Slime', x: 4050, y: 200, hp: 1, speed: 2.4, attackRange: 30, frameInterval: 8, walkFrames: 8, attackFrames: 4, hurtFrames: 6, deadFrames: 3 },
-        { type: 'Red_Slime', x: 4100, y: 200, hp: 1, speed: 2.2, attackRange: 30, frameInterval: 8, walkFrames: 8, attackFrames: 4, hurtFrames: 6, deadFrames: 3 },
-        { type: 'Red_Slime', x: 4200, y: 200, hp: 1, speed: 2.5, attackRange: 30, frameInterval: 8, walkFrames: 8, attackFrames: 4, hurtFrames: 6, deadFrames: 3 },
-
-        { type: 'Green_Slime', x: 5000, y: 200, hp: 1, speed: 1.2, attackRange: 30, frameInterval: 8, walkFrames: 8, attackFrames: 4, hurtFrames: 6, deadFrames: 3 },
-        { type: 'Green_Slime', x: 5100, y: 200, hp: 1, speed: 1.2, attackRange: 30, frameInterval: 8, walkFrames: 8, attackFrames: 4, hurtFrames: 6, deadFrames: 3 },
-         	
-        { type: 'Blue_Slime', x: 5000, y: 200, hp: 1, speed: 1.8, attackRange: 30, frameInterval: 8, walkFrames: 8, attackFrames: 4, hurtFrames: 6, deadFrames: 3 }, 
-        { type: 'Blue_Slime', x: 5125, y: 207, hp: 1, speed: 1.7, attackRange: 30, frameInterval: 8, walkFrames: 8, attackFrames: 4, hurtFrames: 6, deadFrames: 3 }, 
-
-        { type: 'Red_Slime', x: 5000, y: 200, hp: 1, speed: 2.5, attackRange: 30, frameInterval: 8, walkFrames: 8, attackFrames: 4, hurtFrames: 6, deadFrames: 3 },
-        { type: 'Red_Slime', x: 5150, y: 200, hp: 1, speed: 2.5, attackRange: 30, frameInterval: 8, walkFrames: 8, attackFrames: 4, hurtFrames: 6, deadFrames: 3 },
-       ];
+  ];
 
     enemies.forEach(en => {
         en.imgIdle = new Image(); en.imgIdle.src = `assets/${en.type}/Idle.png`;
@@ -315,27 +287,14 @@ function initEnemies() {
         if (en.frameInterval === undefined) en.frameInterval = 8;
         en.state = 'patrol'; en.facing = 'left'; en.attackCooldown = 0;
         en.velY = 0; en.onGround = false;
-
-        if (en.type === 'Blue_Slime') {
-            en.jumpCooldown = Math.floor(Math.random() * 120) + 30;
-            en.jumpInterval = Math.floor(Math.random() * 90) + 60;
-        }
     });
 }
 
 // --- PLATAFORMAS ---
 const platforms = [
 
-// --- Cerca ---
-    { x: 450, y: 270, w: 70, h: 50, type: 'pattern', alpha: 0 },
 // --- Chão parte 1 ---
-    { x: 0, y: 300, w: 2000, h: 150, type: 'pattern' },
-// --- Poço ---
-    { x: 620, y: 223, w: 5, h: 80, type: 'pattern', alpha: 0 },
-// --- Árvore ---
-    { x: 2020, y: 270, w: 150, h: 20, type: 'stretch', alpha: 0 },
-// --- Chão parte 2 ---
-    { x: 2150, y: 300, w: 4800, h: 150, type: 'pattern' }, 
+    { x: 0, y: 300, w: 7000, h: 150, type: 'pattern' },
 ];
 
 // --- Cenário ---
@@ -343,48 +302,7 @@ const fundoImg = new Image();
 fundoImg.src = 'assets/fundo.png';
 
 const platformImg = new Image();
-platformImg.src = 'assets/Battleground/Ground_11.png';
-
-const tree1Img = new Image();
-tree1Img.src = 'assets/Battleground/trees/middle_lane_tree1.png';
-const tree2Img = new Image();
-tree2Img.src = 'assets/Battleground/trees/middle_lane_tree2.png';
-const tree3Img = new Image();
-tree3Img.src = 'assets/Battleground/trees/middle_lane_tree3.png';
-const tree4Img = new Image();
-tree4Img.src = 'assets/Battleground/trees/middle_lane_tree4.png';
-const tree5Img = new Image();
-tree5Img.src = 'assets/Battleground/trees/middle_lane_tree5.png';
-const tree6Img = new Image();
-tree6Img.src = 'assets/Battleground/trees/middle_lane_tree6.png';
-const tree7Img = new Image();
-tree7Img.src = 'assets/Battleground/trees/middle_lane_tree7.png';
-const tree8Img = new Image();
-tree8Img.src = 'assets/Battleground/trees/middle_lane_tree8.png';
-const tree9Img = new Image();
-tree9Img.src = 'assets/Battleground/trees/middle_lane_tree9.png';
-const tree10Img = new Image();
-tree10Img.src = 'assets/Battleground/trees/middle_lane_tree10.png';
-const tree11Img = new Image();
-tree11Img.src = 'assets/Battleground/trees/middle_lane_tree11.png';
-
-const wellImg = new Image();
-wellImg.src = 'assets/Battleground/Well.png';
-
-const house1Img = new Image();
-house1Img.src = 'assets/Battleground/House1.png';
-
-const Decor_CartImg = new Image();
-Decor_CartImg.src = 'assets/Battleground/Decor_Cart.png';
-
-const fence_01Img = new Image();
-fence_01Img.src = 'assets/Battleground/Fence_01.png';
-
-const fence_02Img = new Image();
-fence_02Img.src = 'assets/Battleground/Fence_02.png';
-
-const fence_03Img = new Image();
-fence_03Img.src = 'assets/Battleground/Fence_03.png';
+platformImg.src = 'assets/Battleground/Platformer/Ground_02.png';
 
 let platformPattern = null;
 
@@ -395,92 +313,36 @@ platformImg.onload = () => {
 let keys = { left: false, right: false };
 
 const backgroundObjects = [
-    { x: 0, y: 0, width: 7000, height: 1000, img: fundoImg },
-    { x: 120, y: 230, width: 75, height: 75, img: Decor_CartImg },
-	{ x: 270, y: 100, width: 250, height: 200, img: house1Img },
-    { x: 600, y: 200, width: 100, height: 100, img: wellImg },
-
-	{ x: 1000, y: 250, width: 50, height: 50, img: tree9Img },
-	{ x: 1110, y: 250, width: 50, height: 50, img: tree10Img },
-	{ x: 1330, y: 250, width: 50, height: 50, img: tree9Img },
-	{ x: 1440, y: 250, width: 50, height: 50, img: tree8Img },
-	
-	{ x: 2470, y: 5, width: 250, height: 300, img: tree5Img },
-	
-	{ x: 2900, y: 5, width: 250, height: 300, img: tree2Img },
-	{ x: 3010, y: 5, width: 250, height: 300, img: tree2Img },
-	{ x: 3120, y: 5, width: 250, height: 300, img: tree2Img },
-	{ x: 3230, y: 5, width: 250, height: 300, img: tree2Img },
-	{ x: 3340, y: 5, width: 250, height: 300, img: tree2Img },
-	
-	{ x: 3450, y: 5, width: 250, height: 300, img: tree2Img },
-	{ x: 3560, y: 5, width: 250, height: 300, img: tree2Img },
-	{ x: 3570, y: 5, width: 250, height: 300, img: tree2Img },
-	{ x: 3680, y: 5, width: 250, height: 300, img: tree2Img },
-	{ x: 3790, y: 5, width: 250, height: 300, img: tree2Img },
-
-	{ x: 4450, y: 5, width: 250, height: 300, img: tree2Img },
-	{ x: 4560, y: 5, width: 250, height: 300, img: tree2Img },
-	{ x: 4570, y: 5, width: 250, height: 300, img: tree2Img },
-	{ x: 4680, y: 5, width: 250, height: 300, img: tree2Img },
-	{ x: 4790, y: 5, width: 250, height: 300, img: tree2Img },
-
-	{ x: 5450, y: 5, width: 250, height: 300, img: tree2Img },
-	{ x: 5560, y: 5, width: 250, height: 300, img: tree2Img },
-	{ x: 5570, y: 5, width: 250, height: 300, img: tree2Img },
-	{ x: 5680, y: 5, width: 250, height: 300, img: tree2Img },
-	{ x: 5790, y: 5, width: 250, height: 300, img: tree2Img },
+	{ x: 0, y: 0, width: 7000, height: 1000, img: fundoImg },
 ];
 
 const foregroundObjects = [
-
-        { x: 400, y: 260, width: 50, height: 50, img: fence_01Img },
-        { x: 450, y: 260, width: 50, height: 50, img: fence_02Img },
-        { x: 500, y: 260, width: 50, height: 50, img: fence_03Img },
-
-	{ x: 1960, y: 110, width: 380, height: 200, img: tree1Img },
-	
-	{ x: 1220, y: 250, width: 50, height: 50, img: tree11Img },
-	
-	{ x: 3060, y: 5, width: 300, height: 300, img: tree3Img },
-	{ x: 3220, y: 5, width: 300, height: 300, img: tree3Img },
-	{ x: 3560, y: 5, width: 300, height: 300, img: tree3Img },
-	{ x: 3720, y: 5, width: 300, height: 300, img: tree3Img },
-
-	{ x: 4060, y: 5, width: 300, height: 300, img: tree3Img },
-	{ x: 4220, y: 5, width: 300, height: 300, img: tree3Img },
-	{ x: 4560, y: 5, width: 300, height: 300, img: tree3Img },
-	{ x: 4720, y: 5, width: 300, height: 300, img: tree3Img },
-
-	{ x: 5060, y: 5, width: 300, height: 300, img: tree3Img },
-	{ x: 5220, y: 5, width: 300, height: 300, img: tree3Img },
-	{ x: 5560, y: 5, width: 300, height: 300, img: tree3Img },
-	{ x: 5720, y: 5, width: 300, height: 300, img: tree3Img },
+//	{ x: 5720, y: 5, width: 300, height: 300, img: tree3Img },
 ];
 
 // --- NPCs ---
-const oxNpc = {
-    x: 10, y: 210, width: 110, height: 110, imgIdle: new Image(),
-    idleFrames: 4, currentFrame: 0, frameTimer: 0, frameInterval: 20,
-    phrases: ["Muuu!"], dialogueIndex: 0, dialogueTimer: 0
+const musketeerNpc = {
+    x: 700, y: 200, width: 100, height: 100, imgIdle: new Image(), facing: 'left',
+    idleFrames: 4, currentFrame: 3, frameTimer: -999999, frameInterval: 20,
+    activated: false, rangeAtivacao: 250, rangeEsquecimento: 400,
+    phrases: ["Socorro..."], dialogueIndex: 0, dialogueTimer: 0
 };
 
-oxNpc.imgIdle.src = 'assets/Animals/Bull_Idle.png';
+musketeerNpc.imgIdle.src = 'assets/Musketeer/Dead.png';
 
-const farmerNpc = {
-    x: 220, y: 225, width: 80, height: 80, imgIdle: new Image(),
+const musketeer1Npc = {
+    x: 300, y: 200, width: 100, height: 100, imgIdle: new Image(),
     idleFrames: 5, currentFrame: 0, frameTimer: 0, frameInterval: 16,
+    activated: false, rangeAtivacao: 250, rangeEsquecimento: 400,
     phrases: [
-"Que bom que você chegou!", 
-"Enchantress entrou na floresta", 
-"Ajude-a, ela está sozinha."
+"Estava esperando por vocês", "Já evacuamos toda a cidade"
 ],
     dialogueIndex: 0, dialogueTimer: 0
 };
 
-farmerNpc.imgIdle.src = 'assets/Farmer/Idle.png';
+musketeer1Npc.imgIdle.src = 'assets/Musketeer/Idle.png';
 
-const npcs = [oxNpc, farmerNpc];
+const npcs = [musketeerNpc, musketeer1Npc];
 
 // --- FUNÇÃO GLOBAL PARA FALA DO PLAYER ---
 window.playerSay = function(text, duration = 120) {
@@ -568,29 +430,53 @@ window.atacar = function(p) {
 
 // NPCs
 function npcSay(npc, index=0, duration=120){ npc.dialogueIndex=index; npc.dialogueTimer=duration; }
+
 function updateNPCs() {
     npcs.forEach(n => {
+        // Calculamos a distância entre o Player e o NPC
+        const dist = Math.abs(player.x - n.x);
+        
+        // Regra: Player deve estar à direita do NPC para vir da direita para esquerda
+        const playerEstaDireita = player.x > n.x;
 
-        if (n.dialogueTimer > 0) {
-            n.dialogueTimer--;
-        } else {
-            n.dialogueIndex++;
-
-            if (n.dialogueIndex >= n.phrases.length) {
-                n.dialogueIndex = 0;
-            }
-
-            n.dialogueTimer = 180;
+        // --- LÓGICA DE ATIVAÇÃO ---
+        // Só ativa se não estiver ativo E estiver no range E vier da direita
+        if (!n.activated && dist < n.rangeAtivacao && playerEstaDireita) {
+            n.activated = true;
+            n.dialogueIndex = 0;
+            n.dialogueTimer = 180; 
         }
 
-        // animação idle
-        n.frameTimer++;
-        if (n.frameTimer >= n.frameInterval) {
-            n.frameTimer = 0;
-            n.currentFrame = (n.currentFrame + 1) % n.idleFrames;
+        // --- LÓGICA DE ESQUECIMENTO (RESET) ---
+        // Se o player se afastar além do range de esquecimento, resetamos o estado
+        if (n.activated && dist > n.rangeEsquecimento) {
+            n.activated = false;
+            n.dialogueTimer = 0;
+            n.dialogueIndex = 0;
+        }
+
+        // --- ATUALIZAÇÃO DO DIÁLOGO ---
+        if (n.activated && n.dialogueTimer > 0) {
+            n.dialogueTimer--;
+
+            // Se a frase atual acabou e ainda há frases na lista, pula para a próxima
+            if (n.dialogueTimer <= 0 && n.dialogueIndex < n.phrases.length - 1) {
+                n.dialogueIndex++;
+                n.dialogueTimer = 180; // Tempo da nova frase
+            }
+        }
+
+        // --- ANIMAÇÃO (TRAVA) ---
+        if (n.frameTimer !== -999999) {
+            n.frameTimer++;
+            if (n.frameTimer >= n.frameInterval) {
+                n.frameTimer = 0;
+                n.currentFrame = (n.currentFrame + 1) % n.idleFrames;
+            }
         }
     });
 }
+
 // HIT MELEE
 function checkMeleeHit(p) {
     // Usamos 'p' para calcular o alcance e a posição da batida
@@ -650,7 +536,7 @@ function atualizarAnimacaoPlayer(p) {
         p.frameTimer++;
         const intervalo = p.attackFrameInterval || 6; 
 
-        // --- DISPARAR MAGIA NO 3º FRAME (Índice 2) ---
+        // --- DISPARAR MAGIA NO FRAME ESPECÍFICO ---
         if (p.currentFrame === 5 && !p.hasFired) {
             let isRange = p.imgIdle.src.includes('Wizard') || p.imgIdle.src.includes('Enchantress');
             if (isRange) {
@@ -672,20 +558,29 @@ function atualizarAnimacaoPlayer(p) {
         return; // Impede outras animações enquanto ataca
     }
 
-    // ===== ANIMAÇÕES NORMAIS (IDLE, WALK, JUMP) =====
+    // ===== ANIMAÇÕES NORMAIS (IDLE, WALK, RUN, JUMP) =====
     p.frameTimer++;
     if (p.frameTimer >= p.frameInterval) {
         p.frameTimer = 0;
 
         if (!p.onGround) {
+            // PULO
             p.state = 'jumping';
-            p.currentFrame = (p.currentFrame + 1) % p.jumpFrames;
+            p.currentFrame = (p.currentFrame + 1) % (p.jumpFrames || 8);
         } else if (Math.abs(p.velX) > 0.1) {
-            p.state = 'walking';
-            p.currentFrame = (p.currentFrame + 1) % p.walkFrames;
+            // MOVIMENTO (Verifica se está correndo baseado na velocidade)
+            // Se a velocidade absoluta for maior que a velocidade base + margem, considera corrida
+            if (Math.abs(p.velX) > p.speed * 1.1) {
+                p.state = 'running';
+                p.currentFrame = (p.currentFrame + 1) % (p.runFrames || 8);
+            } else {
+                p.state = 'walking';
+                p.currentFrame = (p.currentFrame + 1) % (p.walkFrames || 8);
+            }
         } else {
+            // PARADO
             p.state = 'idle';
-            p.currentFrame = (p.currentFrame + 1) % p.idleFrames;
+            p.currentFrame = (p.currentFrame + 1) % (p.idleFrames || 8);
         }
     }
 }
@@ -786,7 +681,9 @@ if (todosPlayersMortos()) {
     resetGame();
 }
 
-    if(Math.abs(player.x-oxNpc.x)<150 && oxNpc.dialogueTimer<=0){ npcSay(oxNpc,0,120); }
+if(Math.abs(player.x - musketeerNpc.x) < 150 && musketeerNpc.dialogueTimer <= 0){ 
+    npcSay(musketeerNpc, 0, 120); 
+}
     if(player.y>=450){ player.hp=0; player.state='dead'; return;}
 
     if(player.state!=='attacking'){ if(keys.left) player.velX=-player.speed; else if(keys.right) player.velX=player.speed; else player.velX*=0.7; } else player.velX=0;
@@ -924,13 +821,16 @@ cameraY = Math.max(0, Math.min(cameraY, mapHeight - canvas.height / zoom));
     playerDialogTriggers.forEach(trigger=>{
         if(!trigger.used && player.x>trigger.x){ playerSay(trigger.text,180); trigger.used=true;}
     });
-// Gatilho para o Boss (Aparece no X: 6500)
-if (player.x > 6400 && !boss) {
+const gatilhoX = 6400;
+const p1Ativou = player.x > gatilhoX;
+const p2Ativou = player2.active && player2.x > gatilhoX;
+
+if ((p1Ativou || p2Ativou) && !boss) {
     boss = {
         type: 'Boss',
-        x: 6700, // Ele aparece um pouco à frente
+        x: 6700,
         y: 200, 
-        width: 100, height: 100, // Boss é maior!
+        width: 100, height: 100,
         hp: 10, maxHp: 10,
         speed: 2,
         state: 'idle',
@@ -968,13 +868,39 @@ if (boss) {
 function aplicarFisicaCompleta(p, k) {
     if (p.state === 'dead') return;
 
-    // MOVIMENTO HORIZONTAL
-    if (p.state !== 'attacking') {
-        if (k.left) p.velX = -p.speed;
-        else if (k.right) p.velX = p.speed;
-        else p.velX *= 0.7;
+    // --- LÓGICA DE CORRIDA AUTOMÁTICA ---
+    let velocidadeAtual = p.speed;
+
+    // Se estiver se movendo (Esquerda ou Direita)
+    if (k.left || k.right) {
+        p.walkTimer++; // Aumenta o contador
+        
+        // Se já estiver andando há tempo suficiente, ativa a velocidade de corrida
+        if (p.walkTimer > p.runThreshold) {
+            velocidadeAtual = p.speed * 1.8; // Aumenta 80% a velocidade
+        }
     } else {
-        p.velX = 0;
+        // Se soltou os botões, reseta o timer e a velocidade
+        p.walkTimer = 0;
+    }
+
+    // Se mudar de direção bruscamente, zera o impulso (opcional, mas melhora o game feel)
+    if ((k.left && p.facing === 'right') || (k.right && p.facing === 'left')) {
+        p.walkTimer = 0;
+    }
+
+    // --- APLICAÇÃO DO MOVIMENTO HORIZONTAL ---
+    if (p.state !== 'attacking') {
+        if (k.left) {
+            p.velX = -velocidadeAtual;
+        } else if (k.right) {
+            p.velX = velocidadeAtual;
+        } else {
+            p.velX *= 0.7; // Fricção quando solta a tecla
+        }
+    } else {
+        p.velX = 0; // Para ao atacar
+        p.walkTimer = 0; // Reseta a corrida se atacar
     }
 
     p.x += p.velX;
@@ -1117,11 +1043,11 @@ if (boss.state === 'attacking' && boss.currentFrame === 3) {
 
     // 5. IA DE MOVIMENTO
     if (boss.state !== 'hurt' && boss.state !== 'attacking') {
-        boss.facing = (player.x < boss.x) ? 'left' : 'right';
+        boss.facing = (alvo.x < boss.x) ? 'left' : 'right';
 
         if (dist > (boss.attackRange || 80)) {
             boss.state = 'walking';
-            boss.x += (player.x < boss.x) ? -boss.speed : boss.speed;
+            boss.x += (alvo.x < boss.x) ? -boss.speed : boss.speed;
         } else {
             if ((boss.attackCooldown || 0) <= 0) {
                 boss.state = 'attacking';
@@ -1204,6 +1130,7 @@ projectiles.forEach(proj => {
         let img = obj.imgIdle;
         let totalF = obj.idleFrames || 8;
         if (obj.state === 'walking' || obj.state === 'walk') { img = obj.imgWalk; totalF = obj.walkFrames; }
+        else if (obj.state === 'running') { img = obj.imgRun; totalF = obj.runFrames; }
         else if (obj.state === 'attacking') { img = obj.imgAttack; totalF = obj.attackFrames; }
         else if (obj.state === 'jumping' || obj.state === 'jump') { img = obj.imgJump; totalF = obj.jumpFrames || 8; }
         else if (obj.state === 'hurt') { img = obj.imgHurt; totalF = obj.hurtFrames; }
@@ -1233,19 +1160,49 @@ projectiles.forEach(proj => {
     });
 
     // NPCs
-    npcs.forEach(n => {
-        if (!n.imgIdle.complete) return;
-        const fw = n.imgIdle.width / n.idleFrames;
-        const fh = n.imgIdle.height;
-        ctx.drawImage(n.imgIdle, n.currentFrame * fw, 0, fw, fh, n.x, n.y, n.width, n.height);
-        if (n.dialogueTimer > 0) {
-            const text = n.phrases[n.dialogueIndex];
-            ctx.font = "bold 14px Arial"; ctx.textAlign = "center";
-            const textWidth = ctx.measureText(text).width;
-            ctx.fillStyle = "white"; ctx.fillRect(n.x + n.width/2 - textWidth/2 - 5, n.y - 25, textWidth + 10, 20);
-            ctx.fillStyle = "black"; ctx.fillText(text, n.x + n.width/2, n.y - 10);
-        }
-    });
+   npcs.forEach(n => {
+    if (!n.imgIdle.complete) return;
+
+    const fw = n.imgIdle.width / n.idleFrames;
+    const fh = n.imgIdle.height;
+
+    ctx.save(); // 1. SALVA o estado atual (Essencial!)
+
+    if (n.facing === 'left') {
+        // 2. Move para a posição do NPC e inverte o eixo X
+        ctx.translate(n.x + n.width, 0);
+        ctx.scale(-1, 1);
+        
+        // 3. Ao desenhar após o scale(-1), o X deve ser 0
+        ctx.drawImage(
+            n.imgIdle, 
+            n.currentFrame * fw, 0, fw, fh, 
+            0, n.y, n.width, n.height
+        );
+    } else {
+        // Desenho normal para a direita
+        ctx.drawImage(
+            n.imgIdle, 
+            n.currentFrame * fw, 0, fw, fh, 
+            n.x, n.y, n.width, n.height
+        );
+    }
+
+    ctx.restore(); 
+
+    // --- BALÃO DE DIÁLOGO (Sempre desenhado normal, fora do scale) ---
+    if (n.dialogueTimer > 0) {
+        const text = n.phrases[n.dialogueIndex];
+        ctx.font = "bold 14px Arial"; 
+        ctx.textAlign = "center";
+        const textWidth = ctx.measureText(text).width;
+        
+        ctx.fillStyle = "white"; 
+        ctx.fillRect(n.x + n.width/2 - textWidth/2 - 5, n.y - 25, textWidth + 10, 20);
+        ctx.fillStyle = "black"; 
+        ctx.fillText(text, n.x + n.width/2, n.y - 10);
+    }
+});
 
     // Foreground
     foregroundObjects.forEach(d => {
