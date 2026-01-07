@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pixel Quest 2</title>
+    <style>
+        body, html { 
+            margin: 0; padding: 0; height: 100%; width: 100%; 
+            background-color: #000; display: flex; justify-content: center; align-items: center; 
+            overflow: hidden; font-family: 'Courier New', monospace;
+        }
+        #game-area {
+            width: 800px; height: 450px;
+            background-image: url('Background.png');
+            background-size: 100% 100%;
+            image-rendering: pixelated;
+            position: relative;
+            border: 4px solid #333;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        h1 {
+            color: #ffd700; font-size: 48px; text-shadow: 4px 4px #000;
+            margin: 0; position: absolute; transition: all 0.8s ease-in-out;
+            z-index: 10; text-align: center; width: 100%;
+        }
+        h1.pos-top { transform: translateY(-175px); font-size: 28px; }
+        .container {
+            background-color: rgba(0, 0, 0, 0.85);
+            padding: 20px; border-radius: 10px; border: 2px solid #ffd700;
+            display: none; flex-direction: column; align-items: center;
+            animation: fadeIn 0.5s forwards; min-width: 320px; margin-top: 40px;
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .btn {
+            width: 260px; margin: 4px; padding: 10px;
+            background: none; color: white; border: 1px solid white; 
+            cursor: pointer; font-size: 14px; transition: 0.2s;
+            font-family: 'Courier New', monospace;
+        }
+        .btn:hover:not(.locked) { background: white; color: black; transform: scale(1.03); }
+        .locked { opacity: 0.4; cursor: not-allowed !important; border: 1px dashed #777; color: #777; }
+        .hero-grid { display: flex; gap: 40px; margin-top: 10px; }
+        .hero-card { text-align: center; cursor: pointer; transition: 0.2s; width: 100px; }
+        .sprite-container {
+            width: 70px; height: 70px; overflow: hidden; margin: 0 auto 10px;
+            display: flex; justify-content: flex-start; align-items: center;
+            border: 2px solid transparent; transition: 0.2s;
+        }
+        .hero-card img { height: 70px; width: auto; image-rendering: pixelated; }
+        .hero-card:hover .sprite-container { border-color: #ffd700; background: rgba(255,215,0,0.1); }
+        .hero-card span { color: white; font-weight: bold; font-size: 13px; }
+    </style>
+</head>
+<body>
+    <div id="game-area">
+        <h1 id="main-title">PIXEL QUEST 2</h1>
+        
+        <div id="step-players" class="container">
+            <button class="btn" onclick="escolherJogadores(1)">1 JOGADOR</button>
+            <button class="btn locked">2 JOGADORES (??)</button>
+        </div>
+        <div id="step-heroes" class="container">
+            <h2 style="color:#ffd700; font-size: 16px; margin-top: 0;">QUEM VAI JOGAR?</h2>
+            <div class="hero-grid">
+                <div class="hero-card" onclick="finalizarSelecao('loiro')">
+                    <div class="sprite-container"><img src="assets/Swordsman/Idle.png" alt="Swordsman"></div>
+                    <span>Swordsman</span>
+                </div>
+                <div class="hero-card" onclick="finalizarSelecao('castanha')">
+                    <div class="sprite-container"><img src="assets/Knight/Idle.png" alt="Knight"></div>
+                    <span>Knight</span>
+                </div>
+            </div>
+            <button onclick="location.reload()" style="margin-top:15px; background:none; border:none; color:gray; cursor:pointer; font-size: 12px;">[ VOLTAR ]</button>
+        </div>
+        <div id="step-chapters" class="container">
+            <h2 style="color:white; font-size: 14px; margin-bottom: 8px;">SELECIONE O CAPÍTULO</h2>
+            <button class="btn" onclick="iniciarJogo(1)">CAPÍTULO 1</button>
+            <button id="btn-cap2" class="btn locked" onclick="verificarCap(2)">CAPÍTULO 2 (??)</button>
+            <button id="btn-cap3" class="btn locked" onclick="verificarCap(3)">CAPÍTULO 3 (??)</button>
+            <button id="btn-cap4" class="btn locked" onclick="verificarCap(4)">CAPÍTULO 4 (??)</button>
+            <button id="btn-cap5" class="btn locked" onclick="verificarCap(5)">CAPÍTULO 5 (??)</button>
+            <button class="btn" style="color:red; border-color:red; margin-top:10px; padding: 5px;" onclick="location.reload()">SAIR</button>
+        </div>
+    </div>
+
+    <script>
+        const title = document.getElementById('main-title');
+        setTimeout(() => {
+            title.classList.add('pos-top');
+            document.getElementById('step-players').style.display = 'flex';
+        }, 1500);
+
+        function escolherJogadores(num) {
+            localStorage.setItem('jogadores_total', num);
+            document.getElementById('step-players').style.display = 'none';
+            document.getElementById('step-heroes').style.display = 'flex';
+        }
+
+        function finalizarSelecao(heroi) {
+            localStorage.setItem('heroi_da_jornada', heroi);
+            document.getElementById('step-heroes').style.display = 'none';
+            mostrarCapitulos();
+        }
+
+        function mostrarCapitulos() {
+            const menu = document.getElementById('step-chapters');
+            menu.style.display = 'flex';
+            
+            if (localStorage.getItem('2capitulo_1_vencido') === 'true') {
+                liberarBotao('btn-cap2', "CAPÍTULO 2");
+            }
+            if (localStorage.getItem('2capitulo_2_vencido') === 'true') {
+                liberarBotao('btn-cap3', "CAPÍTULO 3");
+            }
+            if (localStorage.getItem('2capitulo_3_vencido') === 'true') {
+                liberarBotao('btn-cap4', "CAPÍTULO 4");
+            }
+            if (localStorage.getItem('2capitulo_4_vencido') === 'true') {
+                liberarBotao('btn-cap5', "CAPÍTULO 5");
+            }
+        }
+
+        function liberarBotao(id, texto) {
+            const btn = document.getElementById(id);
+            if (btn) {
+                btn.classList.remove('locked');
+                btn.innerText = texto;
+            }
+        }
+
+        function iniciarJogo(cap) {
+            window.location.href = `Chapter_${cap}/index.html`;
+        }
+
+        function verificarCap(cap) {
+            const venceuAnterior = localStorage.getItem(`capitulo_${cap-1}_vencido`) === 'true';
+            if (venceuAnterior) {
+                iniciarJogo(cap);
+            } else {
+                alert(`Bloqueado! Vença o Capítulo ${cap-1} primeiro.`);
+            }
+        }
+    </script>
+</body>
+</html>
