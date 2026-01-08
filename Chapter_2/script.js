@@ -4,7 +4,7 @@ canvas.width = 800;
 canvas.height = 450;
 
 // --- CONFIGURAÇÕES GLOBAIS ---
-const bgMusic = new Audio('assets/sounds/346201__levelclearer__phone.wav');
+const bgMusic = new Audio('../assets/sounds/346201__levelclearer__phone.wav');
 bgMusic.loop = true;
 bgMusic.volume = 0.5;
 
@@ -47,22 +47,22 @@ const characterStats = {
     Swordsman: {
         idleFrames: 8, walkFrames: 8, runFrames: 8, jumpFrames: 8, attackFrames: 6, hurtFrames: 3, deadFrames: 3,
         speed: 2, maxHp: 4, jumpForce: -15, attackType: 'melee',
-        folder: 'assets/Swordsman'
+        folder: '../assets/Swordsman'
     },
     Knight: {
         idleFrames: 6, walkFrames: 8, runFrames: 7, jumpFrames: 6, attackFrames: 5, hurtFrames: 3, deadFrames: 4,
         speed: 2, maxHp: 4, jumpForce: -13, attackType: 'melee',
-        folder: 'assets/Knight'
+        folder: '../assets/Knight'
     },
     Wizard: {
         idleFrames: 6, walkFrames: 7, runFrames: 8, jumpFrames: 11, attackFrames: 10, hurtFrames: 4, deadFrames: 4,
         speed: 2.5, maxHp: 3, jumpForce: -14, attackType: 'range',
-        folder: 'assets/Wizard', projectileColor: '#FFD541'
+        folder: '../assets/Wizard', projectileColor: '#FFD541'
     },
     Enchantress: {
         idleFrames: 5, walkFrames: 8, runFrames: 8, jumpFrames: 8, attackFrames: 6, hurtFrames: 2, deadFrames: 5,
         speed: 1.8, maxHp: 5, jumpForce: -16, attackType: 'range',
-        folder: 'assets/Enchantress', projectileColor: '#249FDE'
+        folder: '../assets/Enchantress', projectileColor: '#249FDE'
     }
 };
 
@@ -111,12 +111,15 @@ if (btnTroca) {
         player2.onGround = false;
     }
 
-    // Gatilho de início
+// Gatilho de início
     player.imgIdle.onload = () => {
         gameState = 'playing'; 
         initEnemies(); 
         if (!isMuted) bgMusic.play().catch(() => {}); 
-        
+
+        // --- CORREÇÃO AQUI ---
+        // Removemos o evento para que ele não dispare novamente ao trocar de personagem
+        player.imgIdle.onload = null; 
     };
 
     // Controles Mobile
@@ -258,11 +261,11 @@ function initEnemies() {
   ];
 
     enemies.forEach(en => {
-        en.imgIdle = new Image(); en.imgIdle.src = `assets/${en.type}/Idle.png`;
-        en.imgWalk = new Image(); en.imgWalk.src = `assets/${en.type}/Walk.png`;
-        en.imgAttack = new Image(); en.imgAttack.src = `assets/${en.type}/Attack_1.png`;
-        en.imgHurt = new Image(); en.imgHurt.src = `assets/${en.type}/Hurt.png`;
-        en.imgDead = new Image(); en.imgDead.src = `assets/${en.type}/Dead.png`;
+        en.imgIdle = new Image(); en.imgIdle.src = `../assets/${en.type}/Idle.png`;
+        en.imgWalk = new Image(); en.imgWalk.src = `../assets/${en.type}/Walk.png`;
+        en.imgAttack = new Image(); en.imgAttack.src = `../assets/${en.type}/Attack_1.png`;
+        en.imgHurt = new Image(); en.imgHurt.src = `../assets/${en.type}/Hurt.png`;
+        en.imgDead = new Image(); en.imgDead.src = `../assets/${en.type}/Dead.png`;
 
         en.width = 100; en.height = 100;
         en.currentFrame = 0; en.frameTimer = 0;
@@ -281,10 +284,10 @@ const platforms = [
 
 // --- Cenário ---
 const fundoImg = new Image();
-fundoImg.src = 'assets/fundo.png';
+fundoImg.src = '../assets/fundo.png';
 
 const platformImg = new Image();
-platformImg.src = 'assets/Battleground/Platformer/Ground_02.png';
+platformImg.src = '../assets/Battleground/Platformer/Ground_02.png';
 
 let platformPattern = null;
 
@@ -310,7 +313,7 @@ const musketeerNpc = {
     phrases: ["Socorro..."], dialogueIndex: 0, dialogueTimer: 0
 };
 
-musketeerNpc.imgIdle.src = 'assets/Musketeer/Dead.png';
+musketeerNpc.imgIdle.src = '../assets/Musketeer/Dead.png';
 
 const musketeer1Npc = {
     x: 300, y: 200, width: 100, height: 100, imgIdle: new Image(),
@@ -322,7 +325,7 @@ const musketeer1Npc = {
     dialogueIndex: 0, dialogueTimer: 0
 };
 
-musketeer1Npc.imgIdle.src = 'assets/Musketeer/Idle.png';
+musketeer1Npc.imgIdle.src = '../assets/Musketeer/Idle.png';
 
 const npcs = [musketeerNpc, musketeer1Npc];
 
@@ -827,7 +830,7 @@ if ((p1Ativou || p2Ativou) && !boss) {
     };
     
     // Carregamento automático das imagens (ajuste a pasta conforme seu assets)
-    const folder = 'assets/Enchantress'; 
+    const folder = '../assets/Enchantress'; 
     boss.imgIdle.src = `${folder}/Idle.png`;
     boss.imgWalk.src = `${folder}/Walk.png`;
     boss.imgAttack.src = `${folder}/Attack_1.png`;
