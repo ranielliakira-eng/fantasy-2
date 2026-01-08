@@ -228,7 +228,7 @@ function criarEfeitoTroca(x, y) {
 }
 
 const playerDialogTriggers = [
-    { x: 700, text: "Você vai ficar bem.", used: false },
+ //   { x: 1550, text: "Você vai ficar bem.", used: false },
 
 ];
 
@@ -257,15 +257,23 @@ function dispararProjetil(p) {
 let enemies = [];
 function initEnemies() {
     enemies = [
-        { type: 'Green_Slime', x: 800, y: 200, hp: 1, speed: 1.2, attackRange: 30, frameInterval: 8, walkFrames: 8, attackFrames: 4, hurtFrames: 6, deadFrames: 3 },
-  ];
+        { type: 'Karasu_tengu', x: 1200, y: 200, hp: 3, speed: 3, attackRange: 60, frameInterval: 8, walkFrames: 8, attackFrames: 6, hurtFrames: 3, deadFrames: 6 },
+        { type: 'Karasu_tengu', x: 1500, y: 200, hp: 3, speed: 3, attackRange: 60, frameInterval: 8, walkFrames: 8, attackFrames: 6, hurtFrames: 3, deadFrames: 6 },
+        { type: 'Karasu_tengu', x: 1600, y: 200, hp: 3, speed: 3, attackRange: 60, frameInterval: 8, walkFrames: 8, attackFrames: 6, hurtFrames: 3, deadFrames: 6 },
+        { type: 'Karasu_tengu', x: 2300, y: 200, hp: 3, speed: 3, attackRange: 60, frameInterval: 8, walkFrames: 8, attackFrames: 6, hurtFrames: 3, deadFrames: 6 },
+        { type: 'Karasu_tengu', x: 2500, y: 200, hp: 3, speed: 3, attackRange: 60, frameInterval: 8, walkFrames: 8, attackFrames: 6, hurtFrames: 3, deadFrames: 6 },
+        { type: 'Karasu_tengu', x: 3000, y: 200, hp: 3, speed: 3, attackRange: 60, frameInterval: 8, walkFrames: 8, attackFrames: 6, hurtFrames: 3, deadFrames: 6 },
+        { type: 'Karasu_tengu', x: 3200, y: 200, hp: 3, speed: 3, attackRange: 60, frameInterval: 8, walkFrames: 8, attackFrames: 6, hurtFrames: 3, deadFrames: 6 },
+        { type: 'Karasu_tengu', x: 4000, y: 200, hp: 3, speed: 3, attackRange: 60, frameInterval: 8, walkFrames: 8, attackFrames: 6, hurtFrames: 3, deadFrames: 6 },
+    
+ ];
 
     enemies.forEach(en => {
-        en.imgIdle = new Image(); en.imgIdle.src = `../assets/${en.type}/Idle.png`;
-        en.imgWalk = new Image(); en.imgWalk.src = `../assets/${en.type}/Walk.png`;
-        en.imgAttack = new Image(); en.imgAttack.src = `../assets/${en.type}/Attack_1.png`;
-        en.imgHurt = new Image(); en.imgHurt.src = `../assets/${en.type}/Hurt.png`;
-        en.imgDead = new Image(); en.imgDead.src = `../assets/${en.type}/Dead.png`;
+        en.imgIdle = new Image(); en.imgIdle.src = `../assets/enemies/${en.type}/Idle.png`;
+        en.imgWalk = new Image(); en.imgWalk.src = `../assets/enemies/${en.type}/Walk.png`;
+        en.imgAttack = new Image(); en.imgAttack.src = `../assets/enemies/${en.type}/Attack_1.png`;
+        en.imgHurt = new Image(); en.imgHurt.src = `../assets/enemies/${en.type}/Hurt.png`;
+        en.imgDead = new Image(); en.imgDead.src = `../assets/enemies/${en.type}/Dead.png`;
 
         en.width = 100; en.height = 100;
         en.currentFrame = 0; en.frameTimer = 0;
@@ -277,17 +285,33 @@ function initEnemies() {
 
 // --- PLATAFORMAS ---
 const platforms = [
-
-// --- Chão parte 1 ---
-    { x: 0, y: 300, w: 7000, h: 150, type: 'pattern' },
+    { x: 0, y: 300, w: 5450, h: 150, type: 'pattern' },
+    { x: 5470, y: 260, w: 10, h: 10, type: 'pattern' },
+    { x: 5550, y: 275, w: 10, h: 10, type: 'pattern' },
+    { x: 5600, y: 300, w: 1400, h: 150, type: 'pattern' },
 ];
 
 // --- Cenário ---
 const fundoImg = new Image();
-fundoImg.src = '../assets/fundo.png';
+fundoImg.src = 'fundo.png';
 
 const platformImg = new Image();
 platformImg.src = '../assets/Battleground/Platformer/Ground_02.png';
+
+const CityHouseImg = new Image();
+CityHouseImg.src = '../assets/Battleground/Casa/CityHouse.png';
+
+const CityHouse1Img = new Image();
+CityHouse1Img.src = '../assets/Battleground/Casa/CityHouse1.png';
+
+const CitySmithImg = new Image();
+CitySmithImg.src = '../assets/Battleground/Casa/CitySmith.png';
+
+const CityTavernImg = new Image();
+CityTavernImg.src = '../assets/Battleground/Casa/CityTavern.png';
+
+const CityTowerImg = new Image();
+CityTowerImg.src = '../assets/Battleground/Casa/CityTower.png';
 
 let platformPattern = null;
 
@@ -299,35 +323,38 @@ let keys = { left: false, right: false };
 
 const backgroundObjects = [
 	{ x: 0, y: 0, width: 7000, height: 1000, img: fundoImg },
+	{ x: 1000, y: 140, width: 250, height: 160, img: CityHouseImg},
+	{ x: 1300, y: 140, width: 250, height: 160, img: CityHouseImg },
+	{ x: 1600, y: 140, width: 200, height: 160, img: CityHouse1Img },
+	{ x: 2000, y: 140, width: 450, height: 160, img: CitySmithImg },
+	{ x: 2500, y: 140, width: 450, height: 160, img: CityTavernImg },
+	{ x: 3000, y: 140, width: 250, height: 160, img: CityHouseImg },
+	{ x: 3250, y: 140, width: 200, height: 160, img: CityHouse1Img },
+	{ x: 3500, y: 140, width: 450, height: 160, img: CityTavernImg },
+	{ x: 4000, y: 140, width: 250, height: 160, img: CityHouseImg },
+	{ x: 4250, y: 140, width: 200, height: 160, img: CityHouse1Img },
+	{ x: 4500, y: 140, width: 250, height: 160, img: CityHouseImg },
+	{ x: 4750, y: 140, width: 200, height: 160, img: CityHouse1Img },
 ];
 
 const foregroundObjects = [
-//	{ x: 5720, y: 5, width: 300, height: 300, img: tree3Img },
+	{ x: 5460, y: 0, width: 350, height: 350, img: CityTowerImg },
 ];
 
 // --- NPCs ---
 const musketeerNpc = {
     x: 700, y: 200, width: 100, height: 100, imgIdle: new Image(), facing: 'left',
-    idleFrames: 4, currentFrame: 3, frameTimer: -999999, frameInterval: 20,
-    activated: false, rangeAtivacao: 250, rangeEsquecimento: 400,
-    phrases: ["Socorro..."], dialogueIndex: 0, dialogueTimer: 0
-};
-
-musketeerNpc.imgIdle.src = '../assets/Musketeer/Dead.png';
-
-const musketeer1Npc = {
-    x: 300, y: 200, width: 100, height: 100, imgIdle: new Image(),
     idleFrames: 5, currentFrame: 0, frameTimer: 0, frameInterval: 16,
-    activated: false, rangeAtivacao: 250, rangeEsquecimento: 400,
+    activated: false, rangeAtivacao: 300, rangeEsquecimento: 400,
     phrases: [
 "Estava esperando por vocês", "Já evacuamos toda a cidade"
 ],
     dialogueIndex: 0, dialogueTimer: 0
 };
 
-musketeer1Npc.imgIdle.src = '../assets/Musketeer/Idle.png';
+musketeerNpc.imgIdle.src = '../assets/Musketeer/Idle.png';
 
-const npcs = [musketeerNpc, musketeer1Npc];
+const npcs = [musketeerNpc];
 
 // --- FUNÇÃO GLOBAL PARA FALA DO PLAYER ---
 window.playerSay = function(text, duration = 120) {
@@ -373,9 +400,9 @@ window.resetGame = function () {
 // Função para salvar o progresso e voltar ao menu raiz
 
 window.concluirCapituloEVoutar = function() {
-    localStorage.setItem('capitulo_1_vencido', 'true');
+    localStorage.setItem('2capitulo_2_vencido', 'true');
     
-window.location.href = "../index.html"; // Volta para a pasta anterior (raiz)
+window.location.href = "../index.html";
 
 };
 
@@ -429,7 +456,7 @@ function updateNPCs() {
         if (!n.activated && dist < n.rangeAtivacao && playerEstaDireita) {
             n.activated = true;
             n.dialogueIndex = 0;
-            n.dialogueTimer = 180; 
+            n.dialogueTimer = 80; 
         }
 
         // --- LÓGICA DE ESQUECIMENTO (RESET) ---
@@ -479,7 +506,11 @@ function checkMeleeHit(p) {
             en.hp--;
             en.state = 'hurt';
             en.currentFrame = 0;
-            if (en.hp <= 0) en.state = 'dead';
+           if (en.hp <= 0) {
+    en.state = 'dead';
+    en.currentFrame = 0;
+    en.frameTimer = 0;
+}
         }
     });
 
@@ -623,7 +654,11 @@ projectiles.forEach((proj, index) => {
                 en.hp -= proj.damage;
                 en.state = 'hurt';
                 en.currentFrame = 0;
-                if (en.hp <= 0) en.state = 'dead';
+                if (en.hp <= 0) {
+    en.state = 'dead';
+    en.currentFrame = 0;
+    en.frameTimer = 0;
+}
                 
                 // Remove o projétil ao acertar
                 projectiles.splice(index, 1);
@@ -661,7 +696,7 @@ if (todosPlayersMortos()) {
 }
 
 if(Math.abs(player.x - musketeerNpc.x) < 150 && musketeerNpc.dialogueTimer <= 0){ 
-    npcSay(musketeerNpc, 0, 120); 
+    npcSay(musketeerNpc, 0, 60); 
 }
     if(player.y>=450){ player.hp=0; player.state='dead'; return;}
 
@@ -723,10 +758,18 @@ cameraY = Math.max(0, Math.min(cameraY, mapHeight - canvas.height / zoom));
             if(en.x+40<p.x+p.w && en.x+60>p.x && en.y+en.height>=p.y && en.y+en.height<=p.y+10){ en.y=p.y-en.height; en.velY=0; en.onGround=true; }
         });
 
-        if(en.state==='dead'){ if(en.frameTimer>=en.frameInterval && en.currentFrame<en.deadFrames-1){ en.currentFrame++; en.frameTimer=0;} return; }
-
-        if(en.type==='Blue_Slime' && en.onGround){ en.jumpCooldown--; if(en.jumpCooldown<=0){ en.velY=-12; en.onGround=false; en.jumpCooldown=en.jumpInterval; } }
-
+// --- NOVO BLOCO DE MORTE ---
+if(en.state === 'dead'){ 
+    en.frameTimer++; 
+    if(en.frameTimer >= en.frameInterval) {
+        if(en.currentFrame < en.deadFrames - 1){ 
+            en.currentFrame++; 
+        }
+        en.frameTimer = 0;
+    }
+    return; 
+}
+        
 // --- LÓGICA DE ESTADOS ---
         if(en.state === 'hurt') {
             en.frameTimer++;
@@ -786,32 +829,33 @@ cameraY = Math.max(0, Math.min(cameraY, mapHeight - canvas.height / zoom));
         if(en.attackCooldown > 0) en.attackCooldown--;
 
         // Atualiza a animação para estados que não são 'attacking' (que já tem sua lógica acima)
-        if(en.state !== 'attacking' && en.state !== 'dead') {
-            en.frameTimer++;
-            if(en.frameTimer >= en.frameInterval) {
-                let totalF = (en.state === 'patrol' || en.state === 'chase') ? en.walkFrames : en.idleFrames;
-                en.currentFrame = (en.currentFrame + 1) % totalF;
-                en.frameTimer = 0;
-            }
-        }
+if(en.state !== 'attacking' && en.state !== 'dead' && en.state !== 'hurt') {
+    en.frameTimer++;
+    if(en.frameTimer >= en.frameInterval) {
+        // Lembre-se de manter a correção que fizemos antes aqui no totalF!
+        let totalF = (en.state === 'patrol' || en.state === 'chase') ? en.walkFrames : en.idleFrames;
+        en.currentFrame = (en.currentFrame + 1) % totalF;
+        en.frameTimer = 0;
+    }
+}
     }); // Fim do forEach
 
     // PLAYER DIALOG
     playerDialogTriggers.forEach(trigger=>{
         if(!trigger.used && player.x>trigger.x){ playerSay(trigger.text,180); trigger.used=true;}
     });
-const gatilhoX = 6400;
+const gatilhoX = 6000;
 const p1Ativou = player.x > gatilhoX;
 const p2Ativou = player2.active && player2.x > gatilhoX;
 
 if ((p1Ativou || p2Ativou) && !boss) {
     boss = {
         type: 'Boss',
-        x: 6700,
+        x: 6600,
         y: 200, 
         width: 100, height: 100,
-        hp: 10, maxHp: 10,
-        speed: 2,
+        hp: 4, maxHp: 4,
+        speed: 3,
         state: 'idle',
         facing: 'left',
         damage: 1,
@@ -822,15 +866,14 @@ if ((p1Ativou || p2Ativou) && !boss) {
         frameInterval: 8,fala: "",
         falaTimer: 0,
 
-        idleFrames: 5, walkFrames: 8, attackFrames: 6, hurtFrames: 2, deadFrames: 5,
+        idleFrames: 6, walkFrames: 8, attackFrames: 3, hurtFrames: 3, deadFrames: 6,
         
-        // Imagens (Generalizado: você só precisa garantir que as pastas existam)
         imgIdle: new Image(), imgWalk: new Image(), imgAttack: new Image(), 
         imgHurt: new Image(), imgDead: new Image()
     };
     
     // Carregamento automático das imagens (ajuste a pasta conforme seu assets)
-    const folder = '../assets/Enchantress'; 
+    const folder = '../assets/enemies/Yamabushi_tengu'; 
     boss.imgIdle.src = `${folder}/Idle.png`;
     boss.imgWalk.src = `${folder}/Walk.png`;
     boss.imgAttack.src = `${folder}/Attack_1.png`;
@@ -944,7 +987,7 @@ function enemySay(en, type) {
     en.dialogueTimer = 120;
 }
 
-// --- LÓGICA DO BOSS (ENCHANTRESS) ---
+// --- LÓGICA DO BOSS ---
 function updateBossLogic() {
     if (!boss) return;
 
@@ -992,7 +1035,7 @@ function updateBossLogic() {
         boss.currentFrame++;
 
         // VERIFICAÇÃO DE DANO (No frame 3 do ataque)
-if (boss.state === 'attacking' && boss.currentFrame === 3) {
+if (boss.state === 'attacking' && boss.currentFrame === 2) {
     if (dist < boss.attackRange) {
         alvo.hp -= boss.damage || 1;
         alvo.state = 'hurt';
@@ -1016,7 +1059,7 @@ if (boss.state === 'attacking' && boss.currentFrame === 3) {
 
     // 4. GATILHOS DE FALA
     if (dist < 400 && !boss.viuPlayer) {
-        bossDiz("Não venha! O desequilíbrio...");
+        bossDiz("Fora daqui. Agora.");
         boss.viuPlayer = true;
     }
 
@@ -1031,7 +1074,7 @@ if (boss.state === 'attacking' && boss.currentFrame === 3) {
             if ((boss.attackCooldown || 0) <= 0) {
                 boss.state = 'attacking';
                 boss.currentFrame = 0;
-                if (Math.random() < 0.3) bossDiz("Eu não consigo me controlar!");
+                if (Math.random() < 0.3) bossDiz("Essa terra não é mais de vocês");
             } else {
                 boss.state = 'idle';
             }
@@ -1106,9 +1149,13 @@ projectiles.forEach(proj => {
     if (boss) allEntities.push(boss);
 
     allEntities.forEach(obj => {
-        let img = obj.imgIdle;
-        let totalF = obj.idleFrames || 8;
-        if (obj.state === 'walking' || obj.state === 'walk') { img = obj.imgWalk; totalF = obj.walkFrames; }
+    let img = obj.imgIdle;
+    let totalF = obj.idleFrames || 8;
+
+    if (obj.state === 'walking' || obj.state === 'walk' || obj.state === 'patrol' || obj.state === 'chase') { 
+    img = obj.imgWalk; 
+    totalF = obj.walkFrames; 
+}
         else if (obj.state === 'running') { img = obj.imgRun; totalF = obj.runFrames; }
         else if (obj.state === 'attacking') { img = obj.imgAttack; totalF = obj.attackFrames; }
         else if (obj.state === 'jumping' || obj.state === 'jump') { img = obj.imgJump; totalF = obj.jumpFrames || 8; }
@@ -1210,7 +1257,7 @@ projectiles.forEach(proj => {
             ctx.fillStyle = "purple"; ctx.fillRect(canvas.width/2 - 200, 40, (boss.hp / boss.maxHp) * 400, 20);
             ctx.strokeStyle = "white"; ctx.strokeRect(canvas.width/2 - 200, 40, 400, 20);
             ctx.fillStyle = "white"; ctx.font = "bold 14px Arial"; ctx.textAlign = "center";
-            ctx.fillText("ENCHANTRESS", canvas.width/2, 35);
+            ctx.fillText("YAMABUSHI TENGU", canvas.width/2, 35);
         }
     }
 
@@ -1239,8 +1286,8 @@ projectiles.forEach(proj => {
             if (screen.style.display !== 'flex') {
                 screen.style.display = 'flex';
                 screen.style.backgroundColor = "rgba(0, 0, 0, 0.8)"; 
-                if (title) title.innerHTML = "Você derrubou <br> Enchantress";
-                if (subtitle) subtitle.innerHTML = "Mas o desequilíbrio permanece... <br>Algo pior espreita nas sombras.";
+                if (title) title.innerHTML = "Você derrubou <br> YAMABUSHI TENGU";
+                if (subtitle) subtitle.innerHTML = "Mas criaturas continuam vindo do norte.";
                 if (btnReset) btnReset.style.display = 'none';
                 if (btnNext) btnNext.style.display = 'block';
             }
@@ -1286,8 +1333,8 @@ gameLoop(); // Inicia o loop
 
 // --- FUNÇÃO PARA SALVAR E VOLTAR AO MENU ---
 window.irParaMenu = function() {
-    localStorage.setItem('capitulo_1_vencido', 'true');
-    window.location.href = "../index.html"; // Sai da pasta Chapter_1 para a raiz
+    localStorage.setItem('2capitulo_2_vencido', 'true');
+    window.location.href = "../index.html";
 };
 
 // --- INPUTS DO TECLADO ---
