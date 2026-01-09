@@ -5,14 +5,34 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Cena 2 - O Alerta</title>
 <style>
-  body { margin: 0; background: #000; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
-  canvas { max-width: 100%; max-height: 100%; object-fit: contain; background: #1a1a2e; image-rendering: pixelated; }
+    body, html { 
+        margin: 0; padding: 0; height: 100%; width: 100%; 
+        background-color: #000; display: flex; justify-content: center; align-items: center; 
+        overflow: hidden; font-family: 'Courier New', monospace;
+    }
+    
+    #game-area {
+        width: 800px; height: 450px;
+        /* Se quiser o fundo da caverna em vez da imagem Background.png, mude aqui */
+        background-color: #432; 
+        image-rendering: pixelated;
+        position: relative;
+        border: 4px solid #333;
+        display: flex; justify-content: center; align-items: center;
+        overflow: hidden;
+    }
+
+    canvas {
+        /* Garante que o canvas não ultrapasse a div */
+        max-width: 100%;
+        max-height: 100%;
+    }
 </style>
 </head>
 <body>
-
-<canvas id="gameCanvas" width="800" height="450"></canvas>
-
+    <div id="game-area">
+        <canvas id="gameCanvas" width="800" height="450"></canvas>
+    </div>
 <script>
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");

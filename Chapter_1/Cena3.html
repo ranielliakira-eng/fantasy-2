@@ -5,14 +5,34 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Cena 3 - A promessa das montanhas</title>
 <style>
-  body { margin: 0; background: #000; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
-  canvas { max-width: 100%; max-height: 100%; object-fit: contain; background: #2c3e50; border: 2px solid #333; }
+    body, html { 
+        margin: 0; padding: 0; height: 100%; width: 100%; 
+        background-color: #000; display: flex; justify-content: center; align-items: center; 
+        overflow: hidden; font-family: 'Courier New', monospace;
+    }
+    
+    #game-area {
+        width: 800px; height: 450px;
+        /* Se quiser o fundo da caverna em vez da imagem Background.png, mude aqui */
+        background-color: #432; 
+        image-rendering: pixelated;
+        position: relative;
+        border: 4px solid #333;
+        display: flex; justify-content: center; align-items: center;
+        overflow: hidden;
+    }
+
+    canvas {
+        /* Garante que o canvas não ultrapasse a div */
+        max-width: 100%;
+        max-height: 100%;
+    }
 </style>
 </head>
 <body>
-
-<canvas id="gameCanvas" width="800" height="450"></canvas>
-
+    <div id="game-area">
+        <canvas id="gameCanvas" width="800" height="450"></canvas>
+    </div>
 <script>
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
@@ -42,8 +62,24 @@ const combinedDialogue = [
     { speaker: "Novo Rei Anão", text: "Mas as montanhas não quebram juramentos.", place: "throne" },
     { speaker: "Novo Rei Anão", text: "O que você fez não será esquecido.", place: "throne" },
     { speaker: "Novo Rei Anão", text: "Quando os estandartes forem erguidos, marcharemos.", place: "throne" },
-    { speaker: "Novo Rei Anão", text: "Preparem-se… pois isto é apenas o começo.", place: "throne" }
+{ speaker: "Novo Rei Anão", text: "Preparem-se… pois isto é apenas o começo.", place: "throne" }
 ];
+
+const FLOOR_Y = 225;
+
+const treeImg = new Image();
+// Caminho atualizado conforme sua instrução
+treeImg.src = "../assets/Battleground/Trees/winter_conifer_tree_4.png"; 
+
+// Lista de árvores com posições e escalas variadas para profundidade
+const sceneryTrees = [
+    { x: 200, y: 80, scale: 0.8 },
+    { x: 400, y: 0, scale: 1.2 },
+    { x: 600, y: 60, scale: 0.9 },
+    { x: 800, y: 10, scale: 1.1 },
+    { x: 1000, y:50, scale: 1.0 }
+];
+
 
 // ==================================================
 // ENTIDADES E SPRITES
@@ -65,31 +101,19 @@ function createCharacter(folder, idleFrames, walkFrames) {
     };
 }
 
-// --- LOGICA DE CONFIGURAÇÃO DINÂMICA ---
-const configuracoesPersonagens = {
-    'Knight': { idle: 6, walk: 8 },    // Ajuste esses valores conforme sua folha de sprites
-    'Swordsman': { idle: 8, walk: 8 },
-    'Wizard': { idle: 6, walk: 7 },
-    'Enchantress': { idle: 5, walk: 8 },
-    'Warrior_3': { idle: 5, walk: 8 }
-};
-
 const escolhaMenu = localStorage.getItem('heroi_da_jornada') || 'loiro'; 
 const heroiPadrao = (escolhaMenu === 'castanha') ? 'Knight' : 'Swordsman';
 
-// Criando o Player com base na configuração do dicionário
-const configPlayer = configuracoesPersonagens[heroiPadrao];
-const player = createCharacter(heroiPadrao, configPlayer.idle, configPlayer.walk);
+const player = createCharacter(heroiPadrao, 8, 8);
 player.x = 150;
 
-// Criando NPCs usando o dicionário
-const wizard = createCharacter("Wizard", configuracoesPersonagens['Wizard'].idle, configuracoesPersonagens['Wizard'].walk);
+const wizard = createCharacter("Wizard", 6, 7);
 wizard.x = 50;
 
-const enchantress = createCharacter("Enchantress", configuracoesPersonagens['Enchantress'].idle, configuracoesPersonagens['Enchantress'].walk);
+const enchantress = createCharacter("Enchantress", 5, 8);
 enchantress.x = -50;
 
-const reiAnao = createCharacter("Warrior_3", configuracoesPersonagens['Warrior_3'].idle, configuracoesPersonagens['Warrior_3'].walk);
+const reiAnao = createCharacter("Warrior_3", 5, 8);
 reiAnao.x = 500;
 reiAnao.active = false;
 reiAnao.currentAnim = "idle";
@@ -154,14 +178,32 @@ function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     ctx.save();
+    // APLICA O ZOOM (1.3)
+    // Traduzimos um pouco para compensar o zoom e manter o chão visível
     ctx.translate(-80, -40); 
     ctx.scale(ZOOM_LEVEL, ZOOM_LEVEL);
 
+    // FUNDO (Renderizado com Zoom)
     if (gameState === "travel") {
         ctx.fillStyle = "#2c3e50";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.fillStyle = "#1a252f";
         ctx.fillRect(0, 380, canvas.width, 70);
+
+sceneryTrees.forEach(t => {
+            // O cálculo (player.x * 0.6) cria a ilusão de distância
+            let relativeX = t.x - (player.x * 0.6); 
+            ctx.drawImage(treeImg, relativeX, t.y, 120 * t.scale, 220 * t.scale);
+        });
+
+// 3. DESENHO DA PLATAFORMA (Onde eles pisam)
+        // Criamos uma camada de terra/neve
+        ctx.fillStyle = "#1a1a1a"; // Base escura da plataforma
+        ctx.fillRect(0, FLOOR_Y + 30, 1500, 150); 
+        
+        ctx.fillStyle = "#3d3d3d"; // Topo da plataforma (pedra/estrada)
+        ctx.fillRect(0, FLOOR_Y + 25, 1500, 10);
+
     } else {
         ctx.fillStyle = "#4a0e0e";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -171,13 +213,11 @@ function draw() {
         ctx.fillRect(0, 380, canvas.width, 70);
     }
 
+    // PERSONAGENS (Renderizados com Zoom)
     entities.forEach(e => {
         if (e === reiAnao && !e.active) return;
         const anim = e.animations[e.currentAnim];
-        
-        // O cálculo abaixo garante que o frame seja cortado na largura exata
         const fw = anim.img.width / anim.frameCount;
-        
         ctx.save();
         if (e === reiAnao) {
             ctx.translate(e.x + e.w, e.y);
@@ -189,12 +229,13 @@ function draw() {
         ctx.restore();
     });
 
-    ctx.restore();
+    ctx.restore(); // Finaliza área do Zoom
 
+    // CAIXA DE DIÁLOGO (Sem zoom para não distorcer o texto)
     const d = combinedDialogue[dialogueIndex];
     if (d && gameState !== "fadeOut") {
         ctx.fillStyle = "rgba(0,0,0,0.85)";
-        ctx.fillRect(50, 300, 700, 100); 
+        ctx.fillRect(50, 300, 700, 100); // Movida para baixo para não cobrir o centro
         ctx.strokeStyle = "#d4af37";
         ctx.lineWidth = 2;
         ctx.strokeRect(55, 305, 690, 90);
@@ -222,4 +263,3 @@ loop();
 </script>
 </body>
 </html>
-
