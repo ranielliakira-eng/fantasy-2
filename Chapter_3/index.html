@@ -1,79 +1,153 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pixel Quest 2 - Em Construção</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Pixel Quest</title>
     <style>
-        body, html { 
-            margin: 0; padding: 0; height: 100%; width: 100%; 
-            background-color: #000; display: flex; justify-content: center; align-items: center; 
-            overflow: hidden; font-family: 'Courier New', monospace;
-        }
-        #game-area {
-            width: 800px; height: 450px;
-            background-image: url('../Background.png');
-            background-size: 100% 100%;
-            image-rendering: pixelated;
-            position: relative;
-            border: 4px solid #333;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-        }
-        .container {
-            background-color: rgba(0, 0, 0, 0.9);
-            padding: 30px; border-radius: 10px; border: 2px solid #ffd700;
-            display: flex; flex-direction: column; align-items: center;
-            text-align: center; min-width: 350px;
-        }
-        h1 { color: #ffd700; font-size: 24px; margin: 0 0 10px 0; text-shadow: 2px 2px #000; }
-        p { color: white; font-size: 14px; line-height: 1.6; margin-bottom: 25px; }
-        
-        /* --- ANIMAÇÃO DO SPRITE DE 8 FRAMES --- */
-        .hero-idle {
-            width: 64px;   /* Largura de 1 frame */
-            height: 64px;  /* Altura de 1 frame */
-            background-image: url('../assets/Swordsman/Idle.png');
-            background-repeat: no-repeat;
-            background-size: auto 64px; /* Garante que a altura do sprite bata com a div */
-            image-rendering: pixelated;
-            filter: grayscale(1);
-            margin-bottom: 15px;
-            
-            /* Nome da animação | Tempo | Tipo (steps) | Repetição */
-            animation: playIdle 0.8s steps(8) infinite;
+        body {
+            margin: 0; padding: 0;
+            display: flex; justify-content: center; align-items: center;
+            height: 100vh; background-color: #111;
+            font-family: 'Segoe UI', Arial, sans-serif; 
+            overflow: hidden; touch-action: none;
         }
 
-        @keyframes playIdle {
-            from { background-position: 0px; }
-            to { background-position: -512px; } /* 64px vezes 8 frames */
+        #game-container {
+            position: relative;
+            width: 95vw; 
+            height: 53.43vw; 
+            max-width: 800px;
+            max-height: 450px;
+            background-color: #87CEEB;
+            border: 2px solid #444;
+            box-shadow: 0 0 30px rgba(0,0,0,0.7);
+            overflow: hidden;
+        }
+
+        #game-subtitle {
+            font-size: 18px;
+            color: #ccc;
+            margin-top: -10px;
+            margin-bottom: 20px;
+            font-style: italic;
+        }
+
+        canvas { display: block; width: 100%; height: 100%; }
+
+        .selection-menu {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center; 
+            z-index: 100;
+        }
+
+        .btn-select {
+            padding: 12px 25px; font-size: 18px; cursor: pointer;
+            background: #e67e22; color: white; border: none;
+            border-radius: 8px; margin: 10px; transition: 0.2s;
+            touch-action: manipulation;
+        }
+
+        .controls {
+            position: absolute; bottom: 15px; left: 15px; right: 15px;
+            display: flex; justify-content: space-between; align-items: flex-end;
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        .btn-group { display: flex; gap: 20px; pointer-events: auto; }
+
+        .btn-group-system {
+            display: flex;
+            gap: 5px;
         }
 
         .btn {
-            width: 220px; padding: 12px;
-            background: none; color: #ffd700; border: 2px solid #ffd700; 
-            cursor: pointer; font-size: 14px; font-weight: bold;
-            font-family: 'Courier New', monospace; transition: 0.2s;
+            width: 70px; height: 70px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(4px);
+            border: 2px solid rgba(255, 255, 255, 0.8); 
+            border-radius: 50%;
+            color: white; font-weight: bold; font-size: 24px;
+            display: flex; justify-content: center; align-items: center;
+            user-select: none; 
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
-        .btn:hover { background: #ffd700; color: black; transform: scale(1.05); }
+
+        .btn:active { background: rgba(255, 255, 255, 0.4); transform: scale(0.95); }
+
+        .btn-small {
+            padding: 8px 12px;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid white;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            -webkit-tap-highlight-color: transparent;
+        }
+.btn-group-system {
+    pointer-events: auto;
+}
     </style>
 </head>
 <body>
 
-    <div id="game-area">
-        <div class="container">
-            <div class="hero-idle"></div>
-            
-            <h1>🚧 CAPÍTULO EM OBRAS 🚧</h1>
-            
-            <p>
-                Este herói está descansando enquanto<br>
-                finalizamos esta parte da jornada.<br>
-                <strong>Em breve, novos desafios!</strong>
-            </p>
+<div id="game-container">
+    <canvas id="gameCanvas"></canvas>
 
-            <button class="btn" onclick="window.location.href='../index.html'">VOLTAR AO MENU</button>
-        </div>
+    <div id="game-over-screen" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
+        <h1 id="game-title" style="color: white; font-size: 40px;">Uma história começa...</h1>
+        <p id="game-subtitle"></p>
+
+        <button id="btn-reset" style="padding: 15px 40px; font-size: 22px; background-color: #470D1C; color: white; border: 2px solid #fff; border-radius: 50px; cursor: pointer; margin-bottom: 10px;">
+            TENTAR NOVAMENTE
+        </button>
+
+        <button id="btn-next-chapter" style="display: none; padding: 15px 40px; font-size: 22px; background-color: #27ae60; color: white; border: 2px solid #fff; border-radius: 50px; cursor: pointer;">
+            PRÓXIMA FASE
+        </button>
     </div>
 
+    <div id="mobile-controls" class="controls" style="display: none;">
+        <div class="btn-group">
+            <div class="btn"
+                ontouchstart="window.mover(player, keys, 'left', true)"
+                ontouchend="window.mover(player, keys, 'left', false)"
+                onmousedown="window.mover(player, keys, 'left', true)"
+                onmouseup="window.mover(player, keys, 'left', false)">←</div>
+
+            <div class="btn"
+                ontouchstart="window.mover(player, keys, 'right', true)"
+                ontouchend="window.mover(player, keys, 'right', false)"
+                onmousedown="window.mover(player, keys, 'right', true)"
+                onmouseup="window.mover(player, keys, 'right', false)">→</div>
+        </div>
+
+        <div class="btn-group-system">
+            <button class="btn-small" onclick="window.togglePause()">PAUSE</button>
+            <button id="btn-audio" class="btn-small" onclick="window.toggleSom()">SOM</button>
+            <button id="btn-switch-hero" class="btn-small">TROCAR (Q)</button>
+        </div>
+
+        <div class="btn-group">
+            <div class="btn"
+                ontouchstart="window.pular(player)"
+                onmousedown="window.pular(player)">Pulo</div>
+
+            <div class="btn"
+                ontouchstart="window.atacar(player)"
+                onmousedown="window.atacar(player)">
+                <img src="../assets/espada.png" alt="Ataque" style="width: 70px; height: auto;">
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="script.js"></script>
 </body>
 </html>
