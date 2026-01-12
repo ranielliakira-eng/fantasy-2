@@ -50,18 +50,30 @@
         .hero-card img { height: 70px; width: auto; image-rendering: pixelated; }
         .hero-card:hover .sprite-container { border-color: #ffd700; background: rgba(255,215,0,0.1); }
         .hero-card span { color: white; font-weight: bold; font-size: 13px; }
+        
+        /* Estilo para o controle de som */
+        #sound-control {
+            position: absolute; bottom: 10px; right: 10px;
+            color: white; font-size: 12px; cursor: pointer;
+            background: rgba(0,0,0,0.5); padding: 5px; border: 1px solid #555;
+        }
     </style>
 </head>
 <body>
+    <audio id="bg-music" loop>
+        <source src="../assets/sounds/song.wav" type="audio/wav">
+    </audio>
+
     <div id="game-area">
         <h1 id="main-title">PIXEL QUEST 2</h1>
         
         <div id="step-players" class="container">
             <button class="btn" onclick="escolherJogadores(1)">1 JOGADOR</button>
-            <button class="btn locked">2 JOGADORES (??)</button>
+            <button id="btn-2players" class="btn locked" onclick="escolherJogadores(2)">2 JOGADORES (??)</button>
         </div>
+
         <div id="step-heroes" class="container">
-            <h2 style="color:#ffd700; font-size: 16px; margin-top: 0;">QUEM VAI JOGAR?</h2>
+            <h2 id="hero-title" style="color:#ffd700; font-size: 16px; margin-top: 0;">QUEM VAI JOGAR?</h2>
             <div class="hero-grid">
                 <div class="hero-card" onclick="finalizarSelecao('loiro')">
                     <div class="sprite-container"><img src="assets/Swordsman/Idle.png" alt="Swordsman"></div>
@@ -74,6 +86,7 @@
             </div>
             <button onclick="location.reload()" style="margin-top:15px; background:none; border:none; color:gray; cursor:pointer; font-size: 12px;">[ VOLTAR ]</button>
         </div>
+
         <div id="step-chapters" class="container">
             <h2 style="color:white; font-size: 14px; margin-bottom: 8px;">SELECIONE O CAPÍTULO</h2>
             <button class="btn" onclick="iniciarJogo(1)">CAPÍTULO 1</button>
@@ -83,23 +96,68 @@
             <button id="btn-cap5" class="btn locked" onclick="verificarCap(5)">CAPÍTULO 5 (??)</button>
             <button class="btn" style="color:red; border-color:red; margin-top:10px; padding: 5px;" onclick="location.reload()">SAIR</button>
         </div>
+
+        <div id="sound-control" onclick="toggleSom()">SOM: LIGADO</div>
     </div>
 
     <script>
         const title = document.getElementById('main-title');
+        const musica = document.getElementById('bg-music');
+        let somLigado = true;
+
+        // Verifica se é PC para liberar 2 jogadores
+        function verificarDispositivo() {
+            const btn2 = document.getElementById('btn-2players');
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            
+            if (!isMobile) {
+                btn2.classList.remove('locked');
+                btn2.innerText = "2 JOGADORES";
+            } else {
+                btn2.innerText = "2 JOGADORES (Só PC)";
+            }
+        }
+        verificarDispositivo();
+
         setTimeout(() => {
             title.classList.add('pos-top');
             document.getElementById('step-players').style.display = 'flex';
         }, 1500);
 
         function escolherJogadores(num) {
+            // Tenta iniciar a música no primeiro clique
+            if (somLigado) {
+                musica.play().catch(e => console.log("Interação necessária para áudio"));
+            }
+
+            if (num === 2) {
+                const btn = document.getElementById('btn-2players');
+                if (btn.classList.contains('locked')) return;
+                document.getElementById('hero-title').innerText = "PLAYER 1: ESCOLHA";
+            } else {
+                document.getElementById('hero-title').innerText = "QUEM VAI JOGAR?";
+            }
+
             localStorage.setItem('jogadores_total', num);
             document.getElementById('step-players').style.display = 'none';
             document.getElementById('step-heroes').style.display = 'flex';
         }
 
-        function finalizarSelecao(heroi) {
-            localStorage.setItem('heroi_da_jornada', heroi);
+        function finalizarSelecao(heroiEscolhido) {
+            const totalJogadores = localStorage.getItem('jogadores_total');
+
+            if (totalJogadores === "2") {
+                const p1 = heroiEscolhido;
+                const p2 = (heroiEscolhido === 'loiro') ? 'castanha' : 'loiro';
+                
+                localStorage.setItem('heroi_p1', p1);
+                localStorage.setItem('heroi_p2', p2);
+                localStorage.setItem('heroi_da_jornada', p1); 
+            } else {
+                localStorage.setItem('heroi_da_jornada', heroiEscolhido);
+                localStorage.removeItem('heroi_p2'); 
+            }
+            
             document.getElementById('step-heroes').style.display = 'none';
             mostrarCapitulos();
         }
@@ -108,18 +166,11 @@
             const menu = document.getElementById('step-chapters');
             menu.style.display = 'flex';
             
-            if (localStorage.getItem('2capitulo_1_vencido') === 'true') {
-                liberarBotao('btn-cap2', "CAPÍTULO 2");
-            }
-            if (localStorage.getItem('2capitulo_2_vencido') === 'true') {
-                liberarBotao('btn-cap3', "CAPÍTULO 3");
-            }
-            if (localStorage.getItem('2capitulo_3_vencido') === 'true') {
-                liberarBotao('btn-cap4', "CAPÍTULO 4");
-            }
-            if (localStorage.getItem('2capitulo_4_vencido') === 'true') {
-                liberarBotao('btn-cap5', "CAPÍTULO 5");
-            }
+            // Usa chaves específicas do Pixel Quest 2
+            if (localStorage.getItem('2capitulo_1_vencido') === 'true') liberarBotao('btn-cap2', "CAPÍTULO 2");
+            if (localStorage.getItem('2capitulo_2_vencido') === 'true') liberarBotao('btn-cap3', "CAPÍTULO 3");
+            if (localStorage.getItem('2capitulo_3_vencido') === 'true') liberarBotao('btn-cap4', "CAPÍTULO 4");
+            if (localStorage.getItem('2capitulo_4_vencido') === 'true') liberarBotao('btn-cap5', "CAPÍTULO 5");
         }
 
         function liberarBotao(id, texto) {
@@ -135,11 +186,24 @@
         }
 
         function verificarCap(cap) {
-            const venceuAnterior = localStorage.getItem(`capitulo_${cap-1}_vencido`) === 'true';
+            const venceuAnterior = localStorage.getItem(`2capitulo_${cap-1}_vencido`) === 'true';
             if (venceuAnterior) {
                 iniciarJogo(cap);
             } else {
                 alert(`Bloqueado! Vença o Capítulo ${cap-1} primeiro.`);
+            }
+        }
+
+        function toggleSom() {
+            const btnSom = document.getElementById('sound-control');
+            if (somLigado) {
+                musica.pause();
+                btnSom.innerText = "SOM: MUTADO";
+                somLigado = false;
+            } else {
+                musica.play();
+                btnSom.innerText = "SOM: LIGADO";
+                somLigado = true;
             }
         }
     </script>
