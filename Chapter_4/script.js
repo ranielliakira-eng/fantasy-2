@@ -4,7 +4,7 @@ canvas.width = 800;
 canvas.height = 450;
 
 // --- CONFIGURAÇÕES GLOBAIS ---
-const bgMusic = new Audio('../assets/sounds/346201__levelclearer__phone.wav');
+const bgMusic = new Audio('../assets/sounds/510953__theojt__cinematic-battle-song.mp3');
 bgMusic.loop = true;
 bgMusic.volume = 0.5;
 
