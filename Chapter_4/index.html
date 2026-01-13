@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pixel Quest 2 - Em Construção</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>O Conselho de Guerra</title>
     <style>
         body, html { 
             margin: 0; padding: 0; height: 100%; width: 100%; 
@@ -12,68 +12,160 @@
         }
         #game-area {
             width: 800px; height: 450px;
-            background-image: url('../Background.png');
-            background-size: 100% 100%;
+            background-color: #3d251e; 
             image-rendering: pixelated;
             position: relative;
-            border: 4px solid #333;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            border: 4px solid #555;
         }
-        .container {
-            background-color: rgba(0, 0, 0, 0.9);
-            padding: 30px; border-radius: 10px; border: 2px solid #ffd700;
-            display: flex; flex-direction: column; align-items: center;
-            text-align: center; min-width: 350px;
-        }
-        h1 { color: #ffd700; font-size: 24px; margin: 0 0 10px 0; text-shadow: 2px 2px #000; }
-        p { color: white; font-size: 14px; line-height: 1.6; margin-bottom: 25px; }
-        
-        /* --- ANIMAÇÃO DO SPRITE DE 8 FRAMES --- */
-        .hero-idle {
-            width: 64px;   /* Largura de 1 frame */
-            height: 64px;  /* Altura de 1 frame */
-            background-image: url('../assets/Swordsman/Idle.png');
-            background-repeat: no-repeat;
-            background-size: auto 64px; /* Garante que a altura do sprite bata com a div */
-            image-rendering: pixelated;
-            filter: grayscale(1);
-            margin-bottom: 15px;
-            
-            /* Nome da animação | Tempo | Tipo (steps) | Repetição */
-            animation: playIdle 0.8s steps(8) infinite;
-        }
-
-        @keyframes playIdle {
-            from { background-position: 0px; }
-            to { background-position: -512px; } /* 64px vezes 8 frames */
-        }
-
-        .btn {
-            width: 220px; padding: 12px;
-            background: none; color: #ffd700; border: 2px solid #ffd700; 
-            cursor: pointer; font-size: 14px; font-weight: bold;
-            font-family: 'Courier New', monospace; transition: 0.2s;
-        }
-        .btn:hover { background: #ffd700; color: black; transform: scale(1.05); }
+        canvas { max-width: 100%; max-height: 100%; }
     </style>
 </head>
 <body>
-
     <div id="game-area">
-        <div class="container">
-            <div class="hero-idle"></div>
-            
-            <h1>🚧 CAPÍTULO EM OBRAS 🚧</h1>
-            
-            <p>
-                Este herói está descansando enquanto<br>
-                finalizamos esta parte da jornada.<br>
-                <strong>Em breve, novos desafios!</strong>
-            </p>
-
-            <button class="btn" onclick="window.location.href='../index.html'">VOLTAR AO MENU</button>
-        </div>
+        <canvas id="gameCanvas" width="800" height="450"></canvas>
     </div>
 
+<script>
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+
+let fadeAlpha = 0;
+let dialogueIndex = 0;
+let isFading = false;
+const ZOOM_LEVEL = 1.2;
+
+// ==================================================
+// DIÁLOGOS COM QUEBRAS DE LINHA (\n)
+// ==================================================
+const throneDialogue = [
+    { speaker: "Líder do Clã Sem Camisa", text: "Majestade, acabo de retornar das sombras.\nO que vi além das fronteiras faria o ferro tremer." },
+    { speaker: "Rei Anão", text: "Relate o que viu.\nNão oculte nenhuma pedra desse caminho." },
+    { speaker: "Líder do Clã Sem Camisa", text: "O local está infestado. Feras de chifres e pele grossa.\nElas não querem território, estão apenas afastando todos." },
+    { speaker: "Wizard", text: "Isso é um cerco de contenção. Elas atacam para todos\nos lados para proteger o foco de onde surgem." },
+    { speaker: "Enchantress", text: "A energia delas é agressiva. Estão criando uma zona\nmorta para que ninguém se aproxime do núcleo." },
+    { speaker: "Musketeer", text: "O exército de humanos já se uniu aos anões.\nA noite é nossa aliada para romper esse cerco." },
+    { speaker: "Você", text: "Com nossos exércitos reunidos, temos a potência necessária.\nNossas lâminas abrirão o caminho até o centro do ataque." },
+    { speaker: "Rei Anão", text: "Pois eles cometeram o seu último erro!\nSentirão o peso da união entre o martelo e espada." },
+    { speaker: "Musketeer", text: "Estaremos preparados. Vamos derrubar essas abominações!" },
+    { speaker: "Rei Anão", text: "Líder do Clã, vanguarda! Bruxos, cobertura!\nA batalha será à noite! Vamos marchar para o foco!" }
+];
+
+// ==================================================
+// ENTIDADES
+// ==================================================
+function createSprite(src, frameCount, frameSpeed) {
+    const img = new Image();
+    img.src = src;
+    return { img, frameCount, frameSpeed, frameIndex: 0, timer: 0 };
+}
+
+function createCharacter(folder, idleFrames, x, y) {
+    return {
+        animations: { idle: createSprite(`../assets/${folder}/Idle.png`, idleFrames, 12) },
+        x: x, y: y, w: 90, h: 90
+    };
+}
+
+const escolhaMenu = localStorage.getItem('heroi_da_jornada') || 'loiro'; 
+const heroiPadrao = (escolhaMenu === 'castanha') ? 'Knight' : 'Swordsman';
+
+// Posicionamento em semicírculo (Conselho)
+const leader = createCharacter("Warrior_1", 6, 450, 160); 
+const musketeer = createCharacter("Musketeer", 5, 530, 160);
+const reiAnao = createCharacter("Warrior_3", 5, 350, 160);
+const player = createCharacter(heroiPadrao, 8, 250, 160);
+const wizard = createCharacter("Wizard", 6, 160, 160);
+const enchantress = createCharacter("Enchantress", 5, 70, 160);
+
+const entities = [player, wizard, enchantress, leader, musketeer, reiAnao];
+
+function update() {
+    entities.forEach(e => {
+        const anim = e.animations.idle;
+        anim.timer++;
+        if (anim.timer >= anim.frameSpeed) {
+            anim.timer = 0;
+            anim.frameIndex = (anim.frameIndex + 1) % anim.frameCount;
+        }
+    });
+
+    if (isFading) {
+        fadeAlpha += 0.01;
+        if (fadeAlpha >= 1) {
+            window.location.href = "game.html"; 
+        }
+    }
+}
+
+function nextDialogue() {
+    if (isFading) return;
+    dialogueIndex++;
+    if (dialogueIndex >= throneDialogue.length) isFading = true;
+}
+
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.save();
+    ctx.translate(-40, -20); 
+    ctx.scale(ZOOM_LEVEL, ZOOM_LEVEL);
+
+    // Fundo - Tenda de Guerra
+    ctx.fillStyle = "#3d251e"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#5d4037"; ctx.fillRect(0, 370, canvas.width, 110); 
+
+    // Personagens
+    entities.forEach(e => {
+        const anim = e.animations.idle;
+        const fw = anim.img.width / anim.frameCount;
+        ctx.save();
+        // Os chefes (Direita) olham para a esquerda
+        if (e === reiAnao || e === leader || e === musketeer) {
+            ctx.translate(e.x + e.w, e.y);
+            ctx.scale(-1, 1);
+            ctx.drawImage(anim.img, fw * anim.frameIndex, 0, fw, anim.img.height, 0, 0, e.w, e.h);
+        } else {
+            ctx.drawImage(anim.img, fw * anim.frameIndex, 0, fw, anim.img.height, e.x, e.y, e.w, e.h);
+        }
+        ctx.restore();
+    });
+
+    ctx.restore(); 
+
+    // Caixa de Diálogo
+    const d = throneDialogue[dialogueIndex];
+    if (d && !isFading) {
+        ctx.fillStyle = "rgba(20, 10, 5, 0.9)";
+        ctx.fillRect(50, 280, 700, 140);
+        ctx.strokeStyle = "#d4af37";
+        ctx.lineWidth = 3;
+        ctx.strokeRect(55, 285, 690, 130);
+        
+        const colors = { "Rei Anão": "#ffd700", "Líder do Clã": "#e67e22", "Musketeer": "#bdc3c7", "Wizard": "#3498db", "Enchantress": "#9b59b6", "Você": "#2ecc71" };
+        ctx.fillStyle = colors[d.speaker] || "#fff";
+        ctx.font = "bold 20px 'Courier New'";
+        ctx.fillText(d.speaker + ":", 75, 320);
+        
+        ctx.fillStyle = "#fff";
+        ctx.font = "18px 'Courier New'";
+        
+        // Processar quebras de linha no canvas
+        const lines = d.text.split('\n');
+        lines.forEach((line, i) => {
+            ctx.fillText(line, 75, 355 + (i * 25));
+        });
+    }
+
+    if (isFading) {
+        ctx.fillStyle = `rgba(0,0,0,${fadeAlpha})`;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+}
+
+window.addEventListener("keydown", e => { if (e.key === "Enter") nextDialogue(); });
+canvas.addEventListener("touchstart", nextDialogue);
+
+function loop() { update(); draw(); requestAnimationFrame(loop); }
+loop();
+</script>
 </body>
 </html>
