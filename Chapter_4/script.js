@@ -47,22 +47,22 @@ let keysP2 = { left: false, right: false };
 const characterStats = {
     Swordsman: {
         idleFrames: 8, walkFrames: 8, runFrames: 8, jumpFrames: 8, attackFrames: 6, hurtFrames: 3, deadFrames: 3,
-        speed: 2, maxHp: 4, jumpForce: -15, attackType: 'melee',
+        speed: 2, maxHp: 4, jumpForce: -15, attackType: 'melee', damage: 1,
         folder: '../assets/Swordsman'
     },
     Knight: {
         idleFrames: 6, walkFrames: 8, runFrames: 7, jumpFrames: 6, attackFrames: 5, hurtFrames: 3, deadFrames: 4,
-        speed: 2, maxHp: 4, jumpForce: -13, attackType: 'melee',
+        speed: 2, maxHp: 4, jumpForce: -13, attackType: 'melee', damage: 1,
         folder: '../assets/Knight'
     },
     Wizard: {
         idleFrames: 6, walkFrames: 7, runFrames: 8, jumpFrames: 11, attackFrames: 10, hurtFrames: 4, deadFrames: 4,
-        speed: 2.5, maxHp: 3, jumpForce: -14, attackType: 'range',
+        speed: 2.5, maxHp: 3, jumpForce: -14, attackType: 'range', damage: 2,
         folder: '../assets/Wizard', projectileColor: '#FFD541'
     },
     Enchantress: {
         idleFrames: 5, walkFrames: 8, runFrames: 8, jumpFrames: 8, attackFrames: 6, hurtFrames: 2, deadFrames: 5,
-        speed: 1.8, maxHp: 5, jumpForce: -16, attackType: 'range',
+        speed: 1.8, maxHp: 5, jumpForce: -16, attackType: 'range', damage: 1,
         folder: '../assets/Enchantress', projectileColor: '#249FDE'
     }
 };
@@ -130,6 +130,7 @@ if (btnTroca) {
 
 function configurarPlayer(p, tipo) {
     const stats = characterStats[tipo];
+    p.damage = stats.damage || 1;
     if (!stats) return console.error("Personagem não encontrado:", tipo);
 
     // Atualiza Frames
@@ -291,11 +292,79 @@ function dispararProjetil(p) {
 let enemies = [];
 function initEnemies() {
     enemies = [
-        { type: 'Warrior_1', x: 50, y: 200, faction: 'ally', hp: 4, speed: 2, attackRange: 60, frameInterval: 8, walkFrames: 8, attackFrames: 6, hurtFrames: 3, deadFrames: 6 },
-        { type: 'Warrior_2', x: 50, y: 200, faction: 'ally', hp: 3, speed: 1.8, attackRange: 60, frameInterval: 8, walkFrames: 8, attackFrames: 6, hurtFrames: 3, deadFrames: 6 },
-        { type: 'Warrior_3', x: 50, y: 200, faction: 'ally', hp: 3, speed: 1.5, attackRange: 60, frameInterval: 8, walkFrames: 8, attackFrames: 6, hurtFrames: 3, deadFrames: 6 },
+        { type: 'Warrior_1', x: 25, y: 200, faction: 'ally', hp: 4, speed: 2, damage: 1, attackRange: 60, frameInterval: 8, walkFrames: 8, attackFrames: 4, hurtFrames: 2, deadFrames: 4 },
+        { type: 'Warrior_1', x: 100, y: 200, faction: 'ally', hp: 4, speed: 2, damage: 1, attackRange: 60, frameInterval: 8, walkFrames: 8, attackFrames: 4, hurtFrames: 2, deadFrames: 4 },
+        { type: 'Warrior_1', x: 60, y: 200, faction: 'ally', hp: 4, speed: 2, damage: 1, attackRange: 60, frameInterval: 8, walkFrames: 8, attackFrames: 4, hurtFrames: 2, deadFrames: 4 },
+        { type: 'Warrior_1', x: 40, y: 200, faction: 'ally', hp: 4, speed: 2, damage: 1, attackRange: 60, frameInterval: 8, walkFrames: 8, attackFrames: 4, hurtFrames: 2, deadFrames: 4 },
+        { type: 'Warrior_1', x: 130, y: 200, faction: 'ally', hp: 4, speed: 2, damage: 1, attackRange: 60, frameInterval: 8, walkFrames: 8, attackFrames: 4, hurtFrames: 2, deadFrames: 4 },
 
+        { type: 'Warrior_2', x: 50, y: 200, faction: 'ally', hp: 3, speed: 1.8, damage: 1, attackRange: 60, frameInterval: 8, walkFrames: 8, attackFrames: 4, hurtFrames: 3, deadFrames: 4 },
+        { type: 'Warrior_2', x: 125, y: 200, faction: 'ally', hp: 3, speed: 1.8, damage: 1, attackRange: 60, frameInterval: 8, walkFrames: 8, attackFrames: 4, hurtFrames: 3, deadFrames: 4 },
+        { type: 'Warrior_2', x: 90, y: 200, faction: 'ally', hp: 3, speed: 1.8, damage: 1, attackRange: 60, frameInterval: 8, walkFrames: 8, attackFrames: 4, hurtFrames: 3, deadFrames: 4 },
+        { type: 'Warrior_2', x: 70, y: 200, faction: 'ally', hp: 3, speed: 1.8, damage: 1, attackRange: 60, frameInterval: 8, walkFrames: 8, attackFrames: 4, hurtFrames: 3, deadFrames: 4 },
+        { type: 'Warrior_2', x: 150, y: 200, faction: 'ally', hp: 3, speed: 1.8, damage: 1, attackRange: 60, frameInterval: 8, walkFrames: 8, attackFrames: 4, hurtFrames: 3, deadFrames: 4 },
 
+        { type: 'Warrior_3', x: 75, y: 200, faction: 'ally', hp: 3, speed: 1.5, damage: 1, attackRange: 60, frameInterval: 8, walkFrames: 8, attackFrames: 4, hurtFrames: 2, deadFrames: 4 },
+        { type: 'Warrior_3', x: 30, y: 200, faction: 'ally', hp: 3, speed: 1.5, damage: 1, attackRange: 60, frameInterval: 8, walkFrames: 8, attackFrames: 4, hurtFrames: 2, deadFrames: 4 },
+        { type: 'Warrior_3', x: 120, y: 200, faction: 'ally', hp: 3, speed: 1.5, damage: 1, attackRange: 60, frameInterval: 8, walkFrames: 8, attackFrames: 4, hurtFrames: 2, deadFrames: 4 },
+        { type: 'Warrior_3', x: 100, y: 200, faction: 'ally', hp: 3, speed: 1.5, damage: 1, attackRange: 60, frameInterval: 8, walkFrames: 8, attackFrames: 4, hurtFrames: 2, deadFrames: 4 },
+        { type: 'Warrior_3', x: 175, y: 200, faction: 'ally', hp: 3, speed: 1.5, damage: 1, attackRange: 60, frameInterval: 8, walkFrames: 8, attackFrames: 4, hurtFrames: 2, deadFrames: 4 },
+
+        { type: 'Musketeer', x: 45, y: 200, faction: 'ally', hp: 3, speed: 1.6, damage: 1, attackRange: 60, frameInterval: 8, walkFrames: 8, attackFrames: 5, hurtFrames: 2, deadFrames: 4 },
+        { type: 'Musketeer', x: 55, y: 200, faction: 'ally', hp: 3, speed: 1.6, damage: 1, attackRange: 60, frameInterval: 8, walkFrames: 8, attackFrames: 5, hurtFrames: 2, deadFrames: 4 },
+        { type: 'Musketeer', x: 65, y: 200, faction: 'ally', hp: 3, speed: 1.6, damage: 1, attackRange: 60, frameInterval: 8, walkFrames: 8, attackFrames: 5, hurtFrames: 2, deadFrames: 4 },
+        { type: 'Musketeer', x: 75, y: 200, faction: 'ally', hp: 3, speed: 1.6, damage: 1, attackRange: 60, frameInterval: 8, walkFrames: 8, attackFrames: 5, hurtFrames: 2, deadFrames: 4 },
+        { type: 'Musketeer', x: 85, y: 200, faction: 'ally', hp: 3, speed: 1.6, damage: 1, attackRange: 60, frameInterval: 8, walkFrames: 8, attackFrames: 5, hurtFrames: 2, deadFrames: 4 },
+        { type: 'Musketeer', x: 95, y: 200, faction: 'ally', hp: 3, speed: 1.6, damage: 1, attackRange: 60, frameInterval: 8, walkFrames: 8, attackFrames: 5, hurtFrames: 2, deadFrames: 4 },
+
+        { type: 'Minotaur_2', x: 1000, y: 200, faction: 'enemy', hp: 5, speed: 2, damage: 1, attackRange: 60, frameInterval: 8, walkFrames: 12, attackFrames: 5, hurtFrames: 3, deadFrames: 5 },
+        { type: 'Minotaur_3', x: 1025, y: 200, faction: 'enemy', hp: 5, speed: 1.8, damage: 1, attackRange: 70, frameInterval: 8, walkFrames: 12, attackFrames: 4, hurtFrames: 3, deadFrames: 5 },
+        { type: 'Minotaur_2', x: 1050, y: 200, faction: 'enemy', hp: 5, speed: 2, damage: 1, attackRange: 60, frameInterval: 8, walkFrames: 12, attackFrames: 5, hurtFrames: 3, deadFrames: 5 },
+        { type: 'Minotaur_3', x: 1075, y: 200, faction: 'enemy', hp: 5, speed: 1.8, damage: 1, attackRange: 70, frameInterval: 8, walkFrames: 12, attackFrames: 4, hurtFrames: 3, deadFrames: 5 },
+        { type: 'Minotaur_2', x: 1100, y: 200, faction: 'enemy', hp: 5, speed: 2, damage: 1, attackRange: 60, frameInterval: 8, walkFrames: 12, attackFrames: 5, hurtFrames: 3, deadFrames: 5 },
+        { type: 'Minotaur_3', x: 1010, y: 200, faction: 'enemy', hp: 5, speed: 1.8, damage: 1, attackRange: 70, frameInterval: 8, walkFrames: 12, attackFrames: 4, hurtFrames: 3, deadFrames: 5 },
+        { type: 'Minotaur_2', x: 1030, y: 200, faction: 'enemy', hp: 5, speed: 2, damage: 1, attackRange: 60, frameInterval: 8, walkFrames: 12, attackFrames: 5, hurtFrames: 3, deadFrames: 5 },
+        { type: 'Minotaur_3', x: 1060, y: 200, faction: 'enemy', hp: 5, speed: 1.8, damage: 1, attackRange: 70, frameInterval: 8, walkFrames: 12, attackFrames: 4, hurtFrames: 3, deadFrames: 5 },
+        { type: 'Minotaur_2', x: 1090, y: 200, faction: 'enemy', hp: 5, speed: 2, damage: 1, attackRange: 60, frameInterval: 8, walkFrames: 12, attackFrames: 5, hurtFrames: 3, deadFrames: 5 },
+        { type: 'Minotaur_3', x: 1080, y: 200, faction: 'enemy', hp: 5, speed: 1.8, damage: 1, attackRange: 70, frameInterval: 8, walkFrames: 12, attackFrames: 4, hurtFrames: 3, deadFrames: 5 },
+        { type: 'Minotaur_2', x: 1040, y: 200, faction: 'enemy', hp: 5, speed: 2, damage: 1, attackRange: 60, frameInterval: 8, walkFrames: 12, attackFrames: 5, hurtFrames: 3, deadFrames: 5 },
+        { type: 'Minotaur_3', x: 1070, y: 200, faction: 'enemy', hp: 5, speed: 1.8, damage: 1, attackRange: 70, frameInterval: 8, walkFrames: 12, attackFrames: 4, hurtFrames: 3, deadFrames: 5 },
+
+        { type: 'Minotaur_2', x: 2000, y: 200, faction: 'enemy', hp: 5, speed: 2, damage: 1, attackRange: 60, frameInterval: 8, walkFrames: 12, attackFrames: 5, hurtFrames: 3, deadFrames: 5 },
+        { type: 'Minotaur_3', x: 2025, y: 200, faction: 'enemy', hp: 5, speed: 1.8, damage: 1, attackRange: 70, frameInterval: 8, walkFrames: 12, attackFrames: 4, hurtFrames: 3, deadFrames: 5 },
+        { type: 'Minotaur_2', x: 2050, y: 200, faction: 'enemy', hp: 5, speed: 2, damage: 1, attackRange: 60, frameInterval: 8, walkFrames: 12, attackFrames: 5, hurtFrames: 3, deadFrames: 5 },
+        { type: 'Minotaur_3', x: 2075, y: 200, faction: 'enemy', hp: 5, speed: 1.8, damage: 1, attackRange: 70, frameInterval: 8, walkFrames: 12, attackFrames: 4, hurtFrames: 3, deadFrames: 5 },
+        { type: 'Minotaur_2', x: 2100, y: 200, faction: 'enemy', hp: 5, speed: 2, damage: 1, attackRange: 60, frameInterval: 8, walkFrames: 12, attackFrames: 5, hurtFrames: 3, deadFrames: 5 },
+        { type: 'Minotaur_3', x: 2010, y: 200, faction: 'enemy', hp: 5, speed: 1.8, damage: 1, attackRange: 70, frameInterval: 8, walkFrames: 12, attackFrames: 4, hurtFrames: 3, deadFrames: 5 },
+        { type: 'Minotaur_2', x: 2030, y: 200, faction: 'enemy', hp: 5, speed: 2, damage: 1, attackRange: 60, frameInterval: 8, walkFrames: 12, attackFrames: 5, hurtFrames: 3, deadFrames: 5 },
+        { type: 'Minotaur_3', x: 2060, y: 200, faction: 'enemy', hp: 5, speed: 1.8, damage: 1, attackRange: 70, frameInterval: 8, walkFrames: 12, attackFrames: 4, hurtFrames: 3, deadFrames: 5 },
+
+        { type: 'Minotaur_2', x: 3000, y: 200, faction: 'enemy', hp: 5, speed: 2, damage: 1, attackRange: 60, frameInterval: 8, walkFrames: 12, attackFrames: 5, hurtFrames: 3, deadFrames: 5 },
+        { type: 'Minotaur_3', x: 3025, y: 200, faction: 'enemy', hp: 5, speed: 1.8, damage: 1, attackRange: 70, frameInterval: 8, walkFrames: 12, attackFrames: 4, hurtFrames: 3, deadFrames: 5 },
+        { type: 'Minotaur_2', x: 3050, y: 200, faction: 'enemy', hp: 5, speed: 2, damage: 1, attackRange: 60, frameInterval: 8, walkFrames: 12, attackFrames: 5, hurtFrames: 3, deadFrames: 5 },
+        { type: 'Minotaur_3', x: 3075, y: 200, faction: 'enemy', hp: 5, speed: 1.8, damage: 1, attackRange: 70, frameInterval: 8, walkFrames: 12, attackFrames: 4, hurtFrames: 3, deadFrames: 5 },
+        { type: 'Minotaur_2', x: 3100, y: 200, faction: 'enemy', hp: 5, speed: 2, damage: 1, attackRange: 60, frameInterval: 8, walkFrames: 12, attackFrames: 5, hurtFrames: 3, deadFrames: 5 },
+        { type: 'Minotaur_3', x: 3010, y: 200, faction: 'enemy', hp: 5, speed: 1.8, damage: 1, attackRange: 70, frameInterval: 8, walkFrames: 12, attackFrames: 4, hurtFrames: 3, deadFrames: 5 },
+        { type: 'Minotaur_2', x: 3030, y: 200, faction: 'enemy', hp: 5, speed: 2, damage: 1, attackRange: 60, frameInterval: 8, walkFrames: 12, attackFrames: 5, hurtFrames: 3, deadFrames: 5 },
+        { type: 'Minotaur_3', x: 3060, y: 200, faction: 'enemy', hp: 5, speed: 1.8, damage: 1, attackRange: 70, frameInterval: 8, walkFrames: 12, attackFrames: 4, hurtFrames: 3, deadFrames: 5 },
+ 
+        { type: 'Minotaur_2', x: 4000, y: 200, faction: 'enemy', hp: 5, speed: 2, damage: 1, attackRange: 60, frameInterval: 8, walkFrames: 12, attackFrames: 5, hurtFrames: 3, deadFrames: 5 },
+        { type: 'Minotaur_3', x: 4025, y: 200, faction: 'enemy', hp: 5, speed: 1.8, damage: 1, attackRange: 70, frameInterval: 8, walkFrames: 12, attackFrames: 4, hurtFrames: 3, deadFrames: 5 },
+        { type: 'Minotaur_2', x: 4050, y: 200, faction: 'enemy', hp: 5, speed: 2, damage: 1, attackRange: 60, frameInterval: 8, walkFrames: 12, attackFrames: 5, hurtFrames: 3, deadFrames: 5 },
+        { type: 'Minotaur_3', x: 4075, y: 200, faction: 'enemy', hp: 5, speed: 1.8, damage: 1, attackRange: 70, frameInterval: 8, walkFrames: 12, attackFrames: 4, hurtFrames: 3, deadFrames: 5 },
+        { type: 'Minotaur_2', x: 4100, y: 200, faction: 'enemy', hp: 5, speed: 2, damage: 1, attackRange: 60, frameInterval: 8, walkFrames: 12, attackFrames: 5, hurtFrames: 3, deadFrames: 5 },
+        { type: 'Minotaur_3', x: 4010, y: 200, faction: 'enemy', hp: 5, speed: 1.8, damage: 1, attackRange: 70, frameInterval: 8, walkFrames: 12, attackFrames: 4, hurtFrames: 3, deadFrames: 5 },
+        { type: 'Minotaur_2', x: 4030, y: 200, faction: 'enemy', hp: 5, speed: 2, damage: 1, attackRange: 60, frameInterval: 8, walkFrames: 12, attackFrames: 5, hurtFrames: 3, deadFrames: 5 },
+        { type: 'Minotaur_3', x: 4060, y: 200, faction: 'enemy', hp: 5, speed: 1.8, damage: 1, attackRange: 70, frameInterval: 8, walkFrames: 12, attackFrames: 4, hurtFrames: 3, deadFrames: 5 },
+
+        { type: 'Minotaur_2', x: 5000, y: 200, faction: 'enemy', hp: 5, speed: 2, damage: 1, attackRange: 60, frameInterval: 8, walkFrames: 12, attackFrames: 5, hurtFrames: 3, deadFrames: 5 },
+        { type: 'Minotaur_3', x: 5025, y: 200, faction: 'enemy', hp: 5, speed: 1.8, damage: 1, attackRange: 70, frameInterval: 8, walkFrames: 12, attackFrames: 4, hurtFrames: 3, deadFrames: 5 },
+        { type: 'Minotaur_2', x: 5050, y: 200, faction: 'enemy', hp: 5, speed: 2, damage: 1, attackRange: 60, frameInterval: 8, walkFrames: 12, attackFrames: 5, hurtFrames: 3, deadFrames: 5 },
+        { type: 'Minotaur_3', x: 5075, y: 200, faction: 'enemy', hp: 5, speed: 1.8, damage: 1, attackRange: 70, frameInterval: 8, walkFrames: 12, attackFrames: 4, hurtFrames: 3, deadFrames: 5 },
+        { type: 'Minotaur_2', x: 5100, y: 200, faction: 'enemy', hp: 5, speed: 2, damage: 1, attackRange: 60, frameInterval: 8, walkFrames: 12, attackFrames: 5, hurtFrames: 3, deadFrames: 5 },
+        { type: 'Minotaur_3', x: 5010, y: 200, faction: 'enemy', hp: 5, speed: 1.8, damage: 1, attackRange: 70, frameInterval: 8, walkFrames: 12, attackFrames: 4, hurtFrames: 3, deadFrames: 5 },
+        { type: 'Minotaur_2', x: 5030, y: 200, faction: 'enemy', hp: 5, speed: 2, damage: 1, attackRange: 60, frameInterval: 8, walkFrames: 12, attackFrames: 5, hurtFrames: 3, deadFrames: 5 },
+        { type: 'Minotaur_3', x: 5060, y: 200, faction: 'enemy', hp: 5, speed: 1.8, damage: 1, attackRange: 70, frameInterval: 8, walkFrames: 12, attackFrames: 4, hurtFrames: 3, deadFrames: 5 },
  ];
 
     enemies.forEach(en => {
@@ -356,18 +425,18 @@ const backgroundObjects = [
 ];
 
 const foregroundObjects = [
-	{ x: 5460, y: 0, width: 350, height: 350, img: CityTowerImg },
+//	{ x: 5460, y: 0, width: 350, height: 350, img: CityTowerImg },
 ];
 
 // --- NPCs ---
 const musketeerNpc = {
-    x: 700, y: 200, width: 100, height: 100, imgIdle: new Image(), facing: 'left',
+    x: -200, y: 200, width: 100, height: 100, imgIdle: new Image(), facing: 'left',
     idleFrames: 5, currentFrame: 0, frameTimer: 0, frameInterval: 16,
     activated: false, rangeAtivacao: 300, rangeEsquecimento: 400,
     phrases: [
-"Estava esperando por vocês", "Já evacuamos toda a cidade"
+"Estava esperando por vocês",
 ],
-    dialogueIndex: 0, dialogueTimer: 0
+   dialogueIndex: 0, dialogueTimer: 0
 };
 
 musketeerNpc.imgIdle.src = '../assets/Musketeer/Idle.png';
@@ -420,7 +489,7 @@ window.resetGame = function () {
 window.concluirCapituloEVoutar = function() {
     localStorage.setItem('2capitulo_4_vencido', 'true');
     
-window.location.href = "../index.html";
+window.location.href = "cutscene.html";
 
 };
 
@@ -520,7 +589,7 @@ function checkMeleeHit(p) {
 
             if (hitboxX < en.x + en.width && hitboxX + alcance > en.x &&
                 p.y < hitY + hitHeight && p.y + p.height > hitY) {
-                en.hp--;
+                en.hp -= (p.damage || 1);
                 en.state = 'hurt';
                 en.currentFrame = 0;
                 if (en.hp <= 0) {
@@ -532,24 +601,27 @@ function checkMeleeHit(p) {
         }
     });
 
-    // 2. Dano no Boss (Trocamos 'player' por 'p')
-    if (boss && boss.state !== 'dead') {
-        if (hitboxX < boss.x + boss.width && hitboxX + alcance > boss.x &&
-            p.y < boss.y + boss.height && p.y + p.height > boss.y) {
-            
-            boss.hp--;
+if (boss && boss.state !== 'dead') {
+    if (hitboxX < boss.x + boss.width && hitboxX + alcance > boss.x &&
+        p.y < boss.y + boss.height && p.y + p.height > boss.y) {
+        
+        // 1. Aplica o Dano (Sempre perde vida)
+        boss.hp--;
+
+        if (boss.state !== 'attacking' && boss.state !== 'hurt') {
             boss.state = 'hurt';
             boss.currentFrame = 0;
             boss.frameTimer = 0;
+        } 
 
-            if (boss.hp <= 0) {
-                boss.state = 'dead';
-                boss.currentFrame = 0;
-                boss.dialogue = "O equilíbrio...";
-                boss.dialogueTimer = 180;
-            }
+        if (boss.hp <= 0) {
+            boss.state = 'dead';
+            boss.currentFrame = 0;
+            boss.dialogue = "O equilíbrio...";
+            boss.dialogueTimer = 180;
         }
     }
+}
 }
 
 function atualizarAnimacaoPlayer(p) {
@@ -691,19 +763,22 @@ projectiles.forEach((proj, index) => {
     });
     
     // COLISÃO COM BOSS (Se existir)
-    if (boss && boss.state !== 'dead') {
-         if (
-            proj.x > boss.x && 
-            proj.x < boss.x + boss.width &&
-            proj.y > boss.y && 
-            proj.y < boss.y + boss.height
-        ) {
-            boss.hp -= proj.damage;
+if (boss && boss.state !== 'dead') {
+     if (proj.x > boss.x && proj.x < boss.x + boss.width &&
+        proj.y > boss.y && proj.y < boss.y + boss.height) {
+            
+        boss.hp -= proj.damage;
+
+        if (boss.state !== 'attacking' && boss.state !== 'hurt') {
             boss.state = 'hurt';
-            if (boss.hp <= 0) boss.state = 'dead';
-            projectiles.splice(index, 1);
+            boss.currentFrame = 0;
+            boss.frameTimer = 0;
         }
+
+        if (boss.hp <= 0) boss.state = 'dead';
+        projectiles.splice(index, 1);
     }
+}
 });
 
 aplicarFisicaCompleta(player, keys);
@@ -934,12 +1009,13 @@ if (en.type === 'Warrior_2' || en.type === 'Warrior_3') {
                 
                 // --- MOMENTO DO DANO ---
                 if(en.currentFrame === attackHitFrame) {
-                    // Verifica se o alvo ainda existe e está num alcance "aceitável"
-                    // Aumentamos a tolerância (+40) para garantir que acerte
                     if(alvo && dist <= en.attackRange + 40) {
-                        alvo.hp -= 1;
-                        alvo.state = 'hurt';
-                        alvo.currentFrame = 0;
+                       alvo.hp -= (en.damage || 1);
+
+	if (alvo.state !== 'attacking' && alvo.state !== 'hurt' && alvo.state !== 'dead') {
+                    alvo.state = 'hurt';
+                    alvo.currentFrame = 0;
+                }
                         
                         // Empurrãozinho (Knockback visual)
                         if(alvo.x < en.x) alvo.x -= 10; else alvo.x += 10;
@@ -989,11 +1065,11 @@ if ((p1Ativou || p2Ativou) && !boss) {
         x: 6600,
         y: 200, 
         width: 200, height: 200,
-        hp: 10, maxHp: 10,
+        hp: 50, maxHp: 50,
         speed: 2,
         state: 'idle',
         facing: 'left',
-        damage: 1,
+        damage: 3,
         faction: 'enemy',
         attackRange: 80,
         attackCooldown: 0,
@@ -1214,7 +1290,7 @@ if (boss.state === 'attacking' && boss.currentFrame === 2) {
         if (boss.currentFrame >= maxFrames) {
             boss.currentFrame = 0;
             if (boss.state === 'hurt' || boss.state === 'attacking') {
-                if (boss.state === 'attacking') boss.attackCooldown = 100;
+                if (boss.state === 'attacking') {boss.attackCooldown = 90;}
                 boss.state = 'idle';
             }
         }
@@ -1531,7 +1607,7 @@ gameLoop(); // Inicia o loop
 // --- FUNÇÃO PARA SALVAR E VOLTAR AO MENU ---
 window.irParaMenu = function() {
     localStorage.setItem('2capitulo_2_vencido', 'true');
-    window.location.href = "../index.html";
+    window.location.href = "cutscene.html";
 };
 
 // --- INPUTS DO TECLADO ---
