@@ -1201,7 +1201,7 @@ function updateBossLogic() {
     if (!boss.isPhase2 && boss.hp < boss.maxHp * 0.5) {
         boss.isPhase2 = true;
         boss.speed = 7; 
-        boss.idleFrames = 4;
+        boss.idleFrames = 5;
         bossDiz("AGORA É SÉRIO!", 60);
         triggerShake(20); 
         if (typeof criarEfeitoTroca === "function") criarEfeitoTroca(boss.x, boss.y); 
@@ -1338,54 +1338,37 @@ if (alvo.hp <= 0) {
         }
     }
 
-    // --- 6. IA DE COMBATE ---
-    if (boss.state !== 'attacking' && boss.state !== 'hurt' && boss.state !== 'dead' && boss.state !== 'jump') {
+// --- 6. IA DE COMBATE ---
+if (boss.state !== 'attacking' && boss.state !== 'hurt' && boss.state !== 'dead' && boss.state !== 'jump') {
+    
+    boss.facing = (alvo.x < boss.x) ? 'left' : 'right';
+
+    // Ajuste: Queremos que a borda do Boss encoste na borda do Player
+    // Margem ideal para o ataque melee conectar
+    const idealDist = boss.attackRange - 20; 
+
+    if (dist > idealDist) {
+        boss.state = 'running';
+        let spd = boss.isPhase2 ? boss.speed * 1.3 : boss.speed;
         
-        // Vira para o alvo
-        boss.facing = (alvo.x < boss.x) ? 'left' : 'right';
-
-        // DECISÃO 1: TELEPORTE
-        let chanceTeleport = boss.isPhase2 ? 0.05 : 0.01;
-        if ((dist > 400 || Math.random() < chanceTeleport) && boss.teleportCooldown <= 0) {
-            boss.state = 'jump'; 
+        if (alvo.x < boss.x) boss.x -= spd;
+        else boss.x += spd;
+    } else {
+        // Chegou na distância de ataque
+        boss.state = 'idle'; 
+        if (boss.attackCooldown <= 0) {
+            boss.state = 'attacking';
             boss.currentFrame = 0;
-            boss.teleportCooldown = 180;
-            boss.velX = 0; 
-            return;
-        }
-
-        // DECISÃO 2: ATAQUE
-        // Verifica se está perto o suficiente (usando a distância calculada pelo centro)
-        // Ajustamos o range aqui pois dist é centro-a-centro
-        if (dist <= boss.attackRange + (boss.width/2 + alvo.width/2)) {
-            boss.velX = 0;
-            if (boss.attackCooldown <= 0) {
-                boss.state = 'attacking';
-                boss.currentFrame = 0;
-                
-                let r = Math.random();
-                if (r < 0.33) {
-                    boss.imgAttack = boss.imgAttack1;
-                    boss.attackFrames = 5;
-                } else if (r < 0.66) {
-                    boss.imgAttack = boss.imgAttack2; 
-                    boss.attackFrames = 3;
-                } else {
-                    boss.imgAttack = boss.imgAttack3; 
-                    boss.attackFrames = 4;
-                }
-            }
-        } 
-        // DECISÃO 3: PERSEGUIR
-        else {
-            boss.state = 'running';
-            let spd = boss.isPhase2 ? boss.speed * 1.3 : boss.speed;
+            boss.frameTimer = 0;
             
-            // Move em direção ao alvo
-            if (alvo.x < boss.x) boss.x -= spd;
-            else boss.x += spd;
+            // Sorteia o ataque
+            let r = Math.random();
+            if (r < 0.33) { boss.imgAttack = boss.imgAttack1; boss.attackFrames = 5; }
+            else if (r < 0.66) { boss.imgAttack = boss.imgAttack2; boss.attackFrames = 3; }
+            else { boss.imgAttack = boss.imgAttack3; boss.attackFrames = 4; }
         }
     }
+}
 }
 
 function draw() {
