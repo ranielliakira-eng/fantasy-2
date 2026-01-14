@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Fim</title>
+<style>
+    body, html { 
+        margin: 0; padding: 0; height: 100%; width: 100%; 
+        background-color: #000; display: flex; justify-content: center; align-items: center; 
+        overflow: hidden; font-family: 'Courier New', monospace;
+    }
+    
+    #game-area {
+        width: 800px; height: 450px;
+        background-color: #432; 
+        image-rendering: pixelated;
+        position: relative;
+        border: 4px solid #333;
+        display: flex; justify-content: center; align-items: center;
+        overflow: hidden;
+    }
+
+    canvas {
+        max-width: 100%;
+        max-height: 100%;
+    }
+</style>
+</head>
+<body>
+    <div id="game-area">
+        <canvas id="gameCanvas" width="800" height="450"></canvas>
+    </div>
+<script>
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+
+// ==================================================
+// CONFIGURAÇÕES DE ZOOM E CÂMERA
+// ==================================================
+const zoomConfig = {
+    scale: 1.3,
+    offsetX: -80,
+    offsetY: -50
+};
+
+let gameState = "dialogue"; 
+let fadeAlpha = 0;
+let dialogueIndex = 0;
+const gravity = 0.8;
+
+// ==================================================
+// CONFIGURAÇÃO DE SPRITES
+// ==================================================
+const configSprites = {
+    'Knight': { idle: 6 },
+    'Swordsman': { idle: 8 },
+    'Wizard': { idle: 6 },
+    'Enchantress': { idle: 5 },
+    'Musketeer': { idle: 5 },
+    'Warrior_1': { idle: 6 },
+    'Warrior_2': { idle: 5 },
+    'Warrior_3': { idle: 5 },
+    'Vampiro': { dead: 8 }
+};
+
+// ==================================================
+// DIÁLOGOS (Musketeer Removido)
+// ==================================================
+const sceneDialogue = [
+    { speaker: "Enchantress", text: "Acabou. A magia que o sustentava se desfez por completo." },
+
+    { speaker: "Wizard", text: "Não há mais selo, nem prisão." },
+    { speaker: "Wizard", text: "O que esteve preso por eras foi destruído esta noite." },
+
+    { speaker: "Você", text: "Ele era rápido... forte... parecia impossível." },
+    { speaker: "Você", text: "Mas caiu. De uma vez por todas." },
+
+    { speaker: "Rei Anão", text: "Que as pedras das montanhas se lembrem disso." },
+    { speaker: "Rei Anão", text: "Não foi lenda. Foi martelo, aço e coragem." },
+
+    { speaker: "Líder do Clã Sem Camisa", text: "Hah! Nunca lutei tanto pra ver algo finalmente morrer!" },
+    { speaker: "Líder do Clã Sem Camisa", text: "E que bom saber que não vai voltar." },
+
+    { speaker: "Líder do Clã Vermelho", text: "A noite perdeu seu senhor." },
+    { speaker: "Líder do Clã Vermelho", text: "Meus guerreiros sentirão a diferença ao amanhecer." },
+
+    { speaker: "Musketeer", text: "Minhas mãos ainda tremem." },
+    { speaker: "Musketeer", text: "Mas é alívio... não medo." },
+
+    { speaker: "Enchantress", text: "Ele foi preso quando o mundo não estava pronto." },
+    { speaker: "Enchantress", text: "Hoje estava." },
+
+    { speaker: "Wizard", text: "E venceu." },
+
+    { speaker: "Você", text: "Então é isso." },
+    { speaker: "Você", text: "O fim da noite eterna." },
+
+    { speaker: "Rei Anão", text: "Portões se abrirão." },
+    { speaker: "Rei Anão", text: "Canções serão cantadas." },
+
+    { speaker: "Líder do Clã Sem Camisa", text: "Amanhã bebemos!" },
+    { speaker: "Líder do Clã Sem Camisa", text: "Hoje... descansamos." },
+
+    { speaker: "Líder do Clã Vermelho", text: "Que esta fogueira marque o fim." },
+    { speaker: "Líder do Clã Vermelho", text: "E não o começo de outra guerra." },
+
+    { speaker: "Musketeer", text: "Pela primeira vez..." },
+    { speaker: "Musketeer", text: "Posso abaixar minha arma." }
+];
+
+
+// ==================================================
+// ENTIDADES E SPRITES
+// ==================================================
+function createSprite(src, frameCount, frameSpeed, loop = true) {
+    const img = new Image();
+    img.src = src;
+    return { img, frameCount, frameSpeed, frameIndex: 0, timer: 0, loop, finished: false };
+}
+
+const fundoImg = new Image();
+fundoImg.src = 'fundo1.png'; 
+
+const groundImg = new Image();
+groundImg.src = '../assets/Battleground/Platformer/Ground_02.png'; 
+
+const escolhaMenu = localStorage.getItem('heroi_da_jornada') || 'loiro'; 
+const heroiPadrao = (escolhaMenu === 'castanha') ? 'Knight' : 'Swordsman';
+
+const player = { x: 325, y: 200, w: 100, h: 100, vy: 0, facing: "right", 
+    sprite: createSprite(`../assets/${heroiPadrao}/Idle.png`, configSprites[heroiPadrao].idle, 12) };
+
+const wizard = { x: 130, y: 200, w: 100, h: 100, vy: 0, facing: "right", 
+    sprite: createSprite("../assets/Wizard/Idle.png", configSprites['Wizard'].idle, 14) };
+
+const enchantress = { x: 100, y: 200, w: 100, h: 100, vy: 0, facing: "right", 
+    sprite: createSprite("../assets/Enchantress/Idle.png", configSprites['Enchantress'].idle, 12) };
+
+const musketeer = { x: 250, y: 200, w: 100, h: 100, vy: 0, facing: "right", 
+    sprite: createSprite("../assets/Musketeer/Idle.png", configSprites['Musketeer'].idle, 12) };
+
+const warrior_1 = { x: 285, y: 200, w: 100, h: 100, vy: 0, facing: "right", 
+    sprite: createSprite("../assets/Warrior_1/Idle.png", configSprites['Warrior_1'].idle, 12) };
+
+const warrior_2 = { x: 225, y: 200, w: 100, h: 100, vy: 0, facing: "right", 
+    sprite: createSprite("../assets/Warrior_2/Idle.png", configSprites['Warrior_2'].idle, 12) };
+
+const warrior_3 = { x: 175, y: 200, w: 100, h: 100, vy: 0, facing: "right", 
+    sprite: createSprite("../assets/Warrior_3/Idle.png", configSprites['Warrior_3'].idle, 12) };
+
+const vampire = { 
+    x: 500, y: 200, w: 100, h: 100, vy: 0, facing: "left", 
+    sprite: createSprite("../assets/enemies/Converted_Vampire/Dead.png", configSprites['Vampiro'].dead, 15, false)
+};
+
+// Entidades ativas na cena
+const entities = [player, wizard, enchantress, musketeer, warrior_1, warrior_2, warrior_3, vampire];
+
+let circleAlpha = 0;
+
+// ==================================================
+// LÓGICA DE UPDATE
+// ==================================================
+function update() {
+    entities.forEach(e => {
+        const s = e.sprite;
+        if (!s.finished) {
+            s.timer++;
+            if (s.timer >= s.frameSpeed) {
+                s.timer = 0;
+                s.frameIndex++;
+                
+                if (s.frameIndex >= s.frameCount) {
+                    if (s.loop) {
+                        s.frameIndex = 0;
+                    } else {
+                        s.frameIndex = s.frameCount - 1;
+                        s.finished = true;
+                    }
+                }
+            }
+        }
+        // Gravidade
+        e.vy += gravity;
+        e.y += e.vy;
+        if (e.y + e.h > 270) { e.y = 270 - e.h; e.vy = 0; }
+    });
+
+    if (gameState === "fadeOut") {
+        fadeAlpha += 0.01;
+        localStorage.setItem('2capitulo_4_vencido', 'true'); 
+        if (fadeAlpha >= 1) window.location.href = "../index.html";
+    }
+}
+
+// ==================================================
+// RENDERIZAÇÃO
+// ==================================================
+function drawEntity(e) {
+    if (!e.sprite.img.complete) return;
+
+    const fw = e.sprite.img.width / e.sprite.frameCount;
+    const fh = e.sprite.img.height;
+    
+    ctx.save();
+    if (e.facing === "left") {
+        ctx.translate(e.x + e.w, e.y);
+        ctx.scale(-1, 1);
+        ctx.drawImage(e.sprite.img, Math.floor(fw * e.sprite.frameIndex), 0, fw, fh, 0, 0, e.w, e.h);
+    } else {
+        ctx.drawImage(e.sprite.img, Math.floor(fw * e.sprite.frameIndex), 0, fw, fh, e.x, e.y, e.w, e.h);
+    }
+    ctx.restore();
+}
+
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    ctx.save();
+    ctx.imageSmoothingEnabled = false; 
+    ctx.translate(zoomConfig.offsetX, zoomConfig.offsetY);
+    ctx.scale(zoomConfig.scale, zoomConfig.scale);
+
+    // Fundo e Chão
+    ctx.fillStyle = "#1a1a2e";
+    ctx.fillRect(-200, -200, canvas.width + 400, canvas.height + 400);
+    ctx.drawImage(fundoImg, 0, 0, 7000, 1000);
+    
+    ctx.fillStyle = "#16213e";
+    ctx.fillRect(-200, 270, canvas.width + 400, 100);
+    ctx.drawImage(groundImg, 0, 270, 800, 150);
+
+    // ==================================================
+    // DESENHO DO CÍRCULO MÁGICO
+    // ==================================================
+    // O círculo começa a aparecer quando o Wizard fala (index 10)
+
+    entities.forEach(drawEntity);
+    ctx.restore(); 
+
+    // UI - Diálogos (mantendo sua lógica atual)
+    if (gameState === "dialogue") {
+        const d = sceneDialogue[dialogueIndex];
+        if (d) {
+            ctx.fillStyle = "rgba(0,0,0,0.85)";
+            ctx.fillRect(50, 320, 700, 100);
+            ctx.strokeStyle = (d.speaker === "Voz vinda do círculo") ? "#ff0000" : "#4ecca3"; // Borda vermelha para o mal
+            ctx.lineWidth = 2;
+            ctx.strokeRect(55, 325, 690, 90);
+            
+            ctx.fillStyle = (d.speaker === "Voz vinda do círculo") ? "#ff4444" : "#4ecca3";
+            ctx.font = "bold 20px Georgia";
+            ctx.fillText(d.speaker + ":", 80, 355);
+            
+            ctx.fillStyle = "#fff";
+            ctx.font = (d.speaker === "Voz vinda do círculo") ? "italic 22px serif" : "18px Arial";
+            ctx.fillText(d.text, 80, 390);
+        }
+    }
+
+    if (gameState === "fadeOut") {
+        ctx.fillStyle = `rgba(0,0,0,${fadeAlpha})`;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+}
+
+function nextDialogue() {
+    if (gameState === "fadeOut") return;
+    
+    dialogueIndex++;
+    
+    if (dialogueIndex >= sceneDialogue.length) {
+        gameState = "fadeOut";
+    }
+}
+
+window.addEventListener("keydown", e => { if (e.key === "Enter") nextDialogue(); });
+canvas.addEventListener("touchstart", nextDialogue);
+
+function loop() { update(); draw(); requestAnimationFrame(loop); }
+loop();
+</script>
+</body>
+</html>

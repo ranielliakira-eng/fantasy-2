@@ -1,79 +1,179 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pixel Quest 2 - Em Construção</title>
-    <style>
-        body, html { 
-            margin: 0; padding: 0; height: 100%; width: 100%; 
-            background-color: #000; display: flex; justify-content: center; align-items: center; 
-            overflow: hidden; font-family: 'Courier New', monospace;
-        }
-        #game-area {
-            width: 800px; height: 450px;
-            background-image: url('../Background.png');
-            background-size: 100% 100%;
-            image-rendering: pixelated;
-            position: relative;
-            border: 4px solid #333;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-        }
-        .container {
-            background-color: rgba(0, 0, 0, 0.9);
-            padding: 30px; border-radius: 10px; border: 2px solid #ffd700;
-            display: flex; flex-direction: column; align-items: center;
-            text-align: center; min-width: 350px;
-        }
-        h1 { color: #ffd700; font-size: 24px; margin: 0 0 10px 0; text-shadow: 2px 2px #000; }
-        p { color: white; font-size: 14px; line-height: 1.6; margin-bottom: 25px; }
-        
-        /* --- ANIMAÇÃO DO SPRITE DE 8 FRAMES --- */
-        .hero-idle {
-            width: 64px;   /* Largura de 1 frame */
-            height: 64px;  /* Altura de 1 frame */
-            background-image: url('../assets/Swordsman/Idle.png');
-            background-repeat: no-repeat;
-            background-size: auto 64px; /* Garante que a altura do sprite bata com a div */
-            image-rendering: pixelated;
-            filter: grayscale(1);
-            margin-bottom: 15px;
-            
-            /* Nome da animação | Tempo | Tipo (steps) | Repetição */
-            animation: playIdle 0.8s steps(8) infinite;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>A Libertação do Vampiro</title>
+<style>
+    body, html { 
+        margin: 0; padding: 0; height: 100%; width: 100%; 
+        background-color: #000; display: flex; justify-content: center; align-items: center; 
+        overflow: hidden; font-family: 'Courier New', monospace;
+    }
+    
+    #game-area {
+        width: 800px; height: 450px;
+        background-color: #432; 
+        image-rendering: pixelated;
+        position: relative;
+        border: 4px solid #333;
+        display: flex; justify-content: center; align-items: center;
+        overflow: hidden;
+    }
 
-        @keyframes playIdle {
-            from { background-position: 0px; }
-            to { background-position: -512px; } /* 64px vezes 8 frames */
-        }
-
-        .btn {
-            width: 220px; padding: 12px;
-            background: none; color: #ffd700; border: 2px solid #ffd700; 
-            cursor: pointer; font-size: 14px; font-weight: bold;
-            font-family: 'Courier New', monospace; transition: 0.2s;
-        }
-        .btn:hover { background: #ffd700; color: black; transform: scale(1.05); }
-    </style>
+    canvas {
+        max-width: 100%;
+        max-height: 100%;
+    }
+</style>
 </head>
 <body>
-
     <div id="game-area">
-        <div class="container">
-            <div class="hero-idle"></div>
-            
-            <h1>🚧 CAPÍTULO EM OBRAS 🚧</h1>
-            
-            <p>
-                Este herói está descansando enquanto<br>
-                finalizamos esta parte da jornada.<br>
-                <strong>Em breve, novos desafios!</strong>
-            </p>
-
-            <button class="btn" onclick="window.location.href='../index.html'">VOLTAR AO MENU</button>
-        </div>
+        <canvas id="gameCanvas" width="800" height="450"></canvas>
     </div>
+<script>
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
 
+const zoomConfig = { scale: 1.3, offsetX: -80, offsetY: -50 };
+
+let gameState = "dialogue"; 
+let fadeAlpha = 0;
+let dialogueIndex = 0;
+let vampireAlpha = 0; 
+const gravity = 0.8;
+
+const sceneDialogue = [
+{ speaker: "Vampiro", text: "Finalmente… livre!" },
+{ speaker: "Vampiro", text: "O Dragão do Caos deturpou a magia dos descendentes das feiticeiras..." },
+{ speaker: "Vampiro", text: "Ao controlar a mente daquele arqueiro," },
+{ speaker: "Vampiro", text: "derrotei o antigo Rei Anão, o que acordou os guardiões!" },
+{ speaker: "Vampiro", text: "MUAHAHAHA! Vocês não entenderam…" },
+{ speaker: "Vampiro", text: "Essas criaturas estavam protegendo o local para que ninguém quebrasse o selo." },
+{ speaker: "Vampiro", text: "Mas vocês fizeram exatamente o que eu queria." },
+{ speaker: "Vampiro", text: "Ao derrotarem o Minotauro — o guardião do último selo —" },
+{ speaker: "Vampiro", text: "vocês mesmos me libertaram! MUAHAHAHA!" },
+{ speaker: "Vampiro", text: "Agora vocês serão meus!" },
+
+];
+
+function createSprite(src, frameCount, frameSpeed, loop = true) {
+    const img = new Image();
+    img.src = src;
+    return { img, frameCount, frameSpeed, frameIndex: 0, timer: 0, loop, finished: false };
+}
+
+const groundImg = new Image(); groundImg.src = '../assets/Battleground/Platformer/Ground_02.png'; 
+
+// Minotauro Caído
+const minotaur = { 
+    x: 250, y: 270 - 300, w: 300, h: 300, 
+    sprite: createSprite("../assets/enemies/Minotaur_1/Dead.png", 5, 1, false)
+};
+minotaur.sprite.frameIndex = 4;
+minotaur.sprite.finished = true;
+
+// O Vampiro com o NOVO CAMINHO
+const vampire = {
+    x: 300, y: 150, w: 120, h: 120,
+    sprite: createSprite("../assets/enemies/Converted_Vampire/Idle.png", 5, 10, true)
+};
+
+function update() {
+    const s = vampire.sprite;
+    s.timer++;
+    if (s.timer >= s.frameSpeed) {
+        s.timer = 0;
+        s.frameIndex = (s.frameIndex + 1) % s.frameCount;
+    }
+
+    if (vampireAlpha < 1) vampireAlpha += 0.01;
+
+    if (gameState === "fadeOut") {
+        fadeAlpha += 0.01;
+        if (fadeAlpha >= 1) window.location.href = "game.html";
+    }
+}
+
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.save();
+    ctx.imageSmoothingEnabled = false; 
+    ctx.translate(zoomConfig.offsetX, zoomConfig.offsetY);
+    ctx.scale(zoomConfig.scale, zoomConfig.scale);
+
+    ctx.fillStyle = "#1a1a2e";
+    ctx.fillRect(-200, -200, canvas.width + 400, canvas.height + 400);
+    ctx.drawImage(groundImg, 0, 270, 800, 150);
+
+    // Círculo Mágico de Sangue
+    ctx.beginPath();
+    ctx.ellipse(minotaur.x + 120, 275, 130, 45, 0, 0, Math.PI * 2);
+    ctx.strokeStyle = "#ff0000"; 
+    ctx.lineWidth = 3;
+    ctx.shadowBlur = 20;
+    ctx.shadowColor = "#ff4400";
+    ctx.stroke();
+
+    // Desenhar Minotauro (Olhando para a Esquerda)
+    ctx.save();
+    const m = minotaur.sprite;
+    if (m.img.complete) {
+        const mw = m.img.width / 5;
+        ctx.translate(minotaur.x + minotaur.w, minotaur.y);
+        ctx.scale(-1, 1);
+        ctx.drawImage(m.img, mw * 4, 0, mw, m.img.height, 0, 0, minotaur.w, minotaur.h);
+    }
+    ctx.restore();
+
+    // Desenhar Vampiro (Olhando para a Esquerda)
+    ctx.save();
+    ctx.globalAlpha = vampireAlpha;
+    const v = vampire.sprite;
+    if (v.img.complete) {
+        const vw = v.img.width / v.frameCount;
+        ctx.translate(vampire.x + vampire.w, vampire.y);
+        ctx.scale(-1, 1);
+        ctx.drawImage(v.img, vw * v.frameIndex, 0, vw, v.img.height, 0, 0, vampire.w, vampire.h);
+    }
+    ctx.restore();
+
+    ctx.restore(); 
+
+    // UI de Diálogo
+    if (gameState === "dialogue") {
+        const d = sceneDialogue[dialogueIndex];
+        ctx.fillStyle = "rgba(20, 0, 0, 0.9)";
+        ctx.fillRect(50, 310, 700, 120);
+        ctx.strokeStyle = "#ff0000";
+        ctx.lineWidth = 3;
+        ctx.strokeRect(55, 315, 690, 110);
+        
+        ctx.fillStyle = "#ff4444";
+        ctx.font = "bold 22px 'Palatino Linotype', serif";
+        ctx.fillText(d.speaker + ":", 80, 345);
+        
+        ctx.fillStyle = "#eee";
+        ctx.font = "italic 19px Georgia";
+        ctx.fillText(d.text, 80, 385);
+    }
+
+    if (gameState === "fadeOut") {
+        ctx.fillStyle = `rgba(0,0,0,${fadeAlpha})`;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+}
+
+function nextDialogue() {
+    dialogueIndex++;
+    if (dialogueIndex >= sceneDialogue.length) gameState = "fadeOut";
+}
+
+window.addEventListener("keydown", e => { if (e.key === "Enter") nextDialogue(); });
+canvas.addEventListener("touchstart", nextDialogue);
+
+function loop() { update(); draw(); requestAnimationFrame(loop); }
+loop();
+</script>
 </body>
 </html>
